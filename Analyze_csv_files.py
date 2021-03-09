@@ -88,54 +88,116 @@ def plot_response(treatment,data,measurement_days):
             ax[1][1].legend(loc='lower right', fontsize='x-large')     
     
     
+
+#FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
+
+def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
+    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
+    Gas_Exchange_data = pd.DataFrame([],columns=columns )
+    for i in range(0,len(data_frame)):
+        AI = data_frame[i]
+        I = AI['PARi'].values
+        A = AI['Photo'].values
+        gs = AI['Cond'].values
+        Ci = AI['Ci'].values
+        PhiPS2 = AI['PhiPS2'].values
+        df1 = pd.DataFrame([],columns=columns )
+        df1['Replicate'] = [i+1]*len(data_frame[i])
+        df1['Species'] = species
+        df1['Treatment'] = treatment
+        df1['Measurement type'] = curve
+        df1['Oxygen level'] = [Oxygen]*len(data_frame[i])
+        df1['Net CO2 assimilation rate'] = A[:]
+        df1['Intercellular CO2 concentration'] = Ci[:]
+        df1['PhiPS2'] = PhiPS2[:]
+        df1['Irradiance'] = I[:]
+        df1['Stomatal conductance for CO2'] = gs[:]
+        Gas_Exchange_data=Gas_Exchange_data.append(df1)
+    return Gas_Exchange_data
+  
+columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
+Gas_Exchange_data = pd.DataFrame([],columns=columns )   
+
 # B.Nigra LL
 measurement_days = [3,9,10]
 A_I_BN_LL = make_data('Light',21,'Bn','LL',measurement_days)
 A_CI_BN_LL = make_data('CO2',21,'Bn','LL',measurement_days)
 plot_response('Light',A_I_BN_LL,measurement_days)
 plot_response('CO2',A_CI_BN_LL,measurement_days)
+df_I=replicates_to_Excel(A_I_BN_LL,'B.Nigra',0.21,'A-I curve','LL')
+df_CI=replicates_to_Excel(A_CI_BN_LL,'B.Nigra',0.21,'A-CI curve','LL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 
-#FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
+A_I_BN_LL = make_data('Light',2,'Bn','LL',measurement_days)
+A_CI_BN_LL = make_data('CO2',2,'Bn','LL',measurement_days)
+plot_response('Light',A_I_BN_LL,measurement_days)
+plot_response('CO2',A_CI_BN_LL,measurement_days)
+df_I=replicates_to_Excel(A_I_BN_LL,'B.Nigra',0.02,'A-I curve','LL')
+df_CI=replicates_to_Excel(A_CI_BN_LL,'B.Nigra',0.02,'A-CI curve','LL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+  
 
-columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
-AI = A_I_BN_LL[0]
-I = AI['PARi'].values
-A = AI['Photo'].values
-gs = AI['Cond'].values
-Ci = AI['Ci'].values
-PhiPS2 = AI['PhiPS2'].values
-Gas_Exchange_data = pd.DataFrame([],columns=columns )
-Gas_Exchange_data['Replicate'] = [1]*len(A_I_BN_LL[0])
-Gas_Exchange_data['Species'] = 'B.Nigra'
-Gas_Exchange_data['Treatment'] = 'LL'
-Gas_Exchange_data['Measurement type'] = 'A-I curve'
-Gas_Exchange_data['Oxygen level'] = [0.21]*len(A_I_BN_LL[0])
-Gas_Exchange_data['Net CO2 assimilation rate'] = A[:]
-Gas_Exchange_data['Intercellular CO2 concentration'] = Ci[:]
-Gas_Exchange_data['PhiPS2'] = PhiPS2[:]
-Gas_Exchange_data['Irradiance'] = I[:]
-Gas_Exchange_data['Stomatal conductance for CO2'] = gs[:]
-Gas_Exchange_data.to_excel(PATH+ 'Gas_Exchange_data.xlsx', index = False)
+# H.Incana LL
+measurement_days = [4,6,12]
+A_I_Hi_LL = make_data('AI',21,'Hi','LL',measurement_days)
+A_CI_Hi_LL = make_data('ACI',21,'Hi','LL',measurement_days)
+plot_response('Light',A_I_Hi_LL,measurement_days)
+plot_response('CO2',A_CI_Hi_LL,measurement_days)
+df_I=replicates_to_Excel(A_I_Hi_LL,'H.Incana',0.21,'A-I curve','LL')
+df_CI=replicates_to_Excel(A_CI_Hi_LL,'H.Incana',0.21,'A-CI curve','LL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+
+A_I_Hi_LL = make_data('Light',2,'Hi','LL',measurement_days)
+A_CI_Hi_LL = make_data('CO2',2,'Hi','LL',measurement_days)
+plot_response('Light',A_I_Hi_LL,measurement_days)
+plot_response('CO2',A_CI_Hi_LL,measurement_days)
+df_I=replicates_to_Excel(A_I_Hi_LL,'H.Incana',0.02,'A-I curve','LL')
+df_CI=replicates_to_Excel(A_CI_Hi_LL,'H.Incana',0.02,'A-CI curve','LL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 
 
+# B.Nigra HL
+measurement_days = [8,13]
+A_I_BN_HL = make_data('AI',21,'Bn','HL',measurement_days)
+A_CI_BN_HL = make_data('ACI',21,'Bn','HL',measurement_days)
+plot_response('Light',A_I_BN_HL,measurement_days)
+plot_response('CO2',A_CI_BN_HL,measurement_days)
+df_I=replicates_to_Excel(A_I_BN_HL,'B.Nigra',0.21,'A-I curve','HL')
+df_CI=replicates_to_Excel(A_CI_BN_HL,'B.Nigra',0.21,'A-CI curve','HL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+
+A_I_BN_HL = make_data('Light',2,'Bn','HL',measurement_days)
+A_CI_BN_HL = make_data('CO2',2,'Bn','HL',measurement_days)
+plot_response('Light',A_I_BN_HL,measurement_days)
+plot_response('CO2',A_CI_BN_HL,measurement_days)
+df_I=replicates_to_Excel(A_I_BN_HL,'B.Nigra',0.02,'A-I curve','HL')
+df_CI=replicates_to_Excel(A_CI_BN_HL,'B.Nigra',0.02,'A-CI curve','HL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 #
-## H.Icana LL
-#measurement_days = [4,6,12]
-#A_I_Hi_LL = make_data('AI',21,'Hi','LL',measurement_days)
-#A_CI_Hi_LL = make_data('ACI',21,'Hi','LL',measurement_days)
-#plot_response('Light',A_I_Hi_LL,measurement_days)
-#plot_response('CO2',A_CI_Hi_LL,measurement_days)
-#
-## B.Nigra HL
-#measurement_days = [8,13]
-#A_I_BN_HL = make_data('AI',21,'Bn','HL',measurement_days)
-#A_CI_BN_HL = make_data('ACI',21,'Bn','HL',measurement_days)
-#plot_response('Light',A_I_BN_HL,measurement_days)
-#plot_response('CO2',A_CI_BN_HL,measurement_days)
-#
-## H.Icana HL
-#measurement_days = [5,11]
-#A_I_Hi_HL = make_data('AI',21,'Hi','HL',measurement_days)
-#A_CI_Hi_HL = make_data('ACI',21,'Hi','HL',measurement_days)
-#plot_response('Light',A_I_Hi_HL,measurement_days)
-#plot_response('CO2',A_CI_Hi_HL,measurement_days)
+# H.Incana HL
+measurement_days = [5,11]
+A_I_Hi_HL = make_data('AI',21,'Hi','HL',measurement_days)
+A_CI_Hi_HL = make_data('ACI',21,'Hi','HL',measurement_days)
+plot_response('Light',A_I_Hi_HL,measurement_days)
+plot_response('CO2',A_CI_Hi_HL,measurement_days)
+df_I=replicates_to_Excel(A_I_Hi_HL,'H.Incana',0.21,'A-I curve','HL')
+df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.21,'A-CI curve','HL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+
+A_I_Hi_HL = make_data('Light',2,'Hi','HL',measurement_days)
+A_CI_Hi_HL = make_data('CO2',2,'Hi','HL',measurement_days)
+plot_response('Light',A_I_Hi_HL,measurement_days)
+plot_response('CO2',A_CI_Hi_HL,measurement_days)
+df_I=replicates_to_Excel(A_I_Hi_HL,'H.Incana',0.02,'A-I curve','HL')
+df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.02,'A-CI curve','HL')
+Gas_Exchange_data=Gas_Exchange_data.append(df_I)
+Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+
+#Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
