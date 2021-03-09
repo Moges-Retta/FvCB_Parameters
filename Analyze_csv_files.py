@@ -18,15 +18,15 @@ def make_data(response,Oxygen,species_code,treatment,measurement_days):
     for day in measurement_days:
         file_name = 'HL-LL_Day'+str(day)+'_'+species_code+'_'+treatment+'.csv'
         data = pd.read_csv (file_name)
-        if response=='AI' and Oxygen==21:
+        if response=='Light' and Oxygen==21:
             AI= data[data['Meas']=='LRC_21']
             AI = AI[FORMAT]
             all_data.append(AI)
-        elif response=='AI' and Oxygen==2:
+        elif response=='Light' and Oxygen==2:
             AI= data[data['Meas']=='LRC_2']
             AI = AI[FORMAT]
             all_data.append(AI)
-        elif response=='ACI' and Oxygen==2:
+        elif response=='CO2' and Oxygen==2:
             ACI= data[data['Meas']=='CO2_2']
             ACI = ACI[FORMAT]
             all_data.append(ACI)     
@@ -37,53 +37,81 @@ def make_data(response,Oxygen,species_code,treatment,measurement_days):
     return all_data   
 
     
-def plot_response(curve,data,measurement_days):
-    fig, ax = plt.subplots()
-    plt.rcParams["figure.figsize"] = (10,8)
+def plot_response(treatment,data,measurement_days):
+
+    plt.rcParams["figure.figsize"] = (15,12)
     plt.rcParams.update({'font.size': 16})
-    plt.ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=24)
-    if curve=='ACI':
-            for day in range(0,len(measurement_days)):
-                ACI = data[day]
+    symbols = ['ko','k^','ks']
+    if treatment=='CO2':
+            fig, ax = plt.subplots(2,2)
+            for i in range(0,len(measurement_days)):
+                symbol=symbols[i]
+                ACI = data[i]
                 Ci = ACI["Ci"].values
                 A = ACI['Photo'].values
-                ax.scatter(np.sort(Ci,axis=None), np.sort(A,axis=None),label='Day'+str(measurement_days[day]))
-            plt.xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=24)  
+                gs = ACI['Cond'].values
+                PhiPS2 = ACI['PhiPS2'].values.astype(float)
+                FvFm = ACI['Fv/Fm'].values
+                ax[0][0].plot(np.sort(Ci,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
+                ax[0][1].plot(np.sort(Ci,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
+                ax[1][0].plot(np.sort(Ci,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
+                ax[1][1].plot(np.sort(Ci,axis=None), np.sort(FvFm,axis=None),'ko',label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
+                ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
+                ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
+                ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
+                ax[1][1].set_ylabel("Fv/Fm (-)")
+                ax[1][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
+                ax[1][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
+                ax[1][1].set_ylim(bottom=0.7)
     else:
-        for day in range(0,len(measurement_days)):
-            AI = data[day]
+        fig, ax = plt.subplots(2,2)
+        for i in range(0,len(measurement_days)):
+            symbol=symbols[i]
+            AI = data[i]
             I = AI["PARi"].values
             A = AI['Photo'].values
-            ax.scatter(np.sort(I,axis=None), np.sort(A,axis=None),label='Day'+str(measurement_days[day]))
-        plt.xlabel("Irradiance (µmol $mol^{-1}$)",fontsize=24)  
-    ax.tick_params(labelsize='medium', width=2)
-    ax.legend(loc='lower right', fontsize='x-large')     
+            gs = AI['Cond'].values
+            PhiPS2 = AI['PhiPS2'].values.astype(float)
+            FvFm = AI['Fv/Fm'].values
+            ax[0][0].plot(np.sort(I,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
+            ax[0][1].plot(np.sort(I,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
+            ax[1][0].plot(np.sort(I,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
+            ax[1][1].plot(np.sort(I,axis=None), np.sort(FvFm,axis=None),symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
+            ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
+            ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
+            ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
+            ax[1][1].set_ylabel("Fv/Fm (-)")
+            ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
+            ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
+            ax[1][1].set_ylim(bottom=0.7)
+#    ax.tick_params(labelsize='medium', width=5)
+            ax[1][1].legend(loc='lower right', fontsize='x-large')     
     
     
 # B.Nigra LL
 measurement_days = [3,9,10]
-A_I_BN_LL = make_data('AI',21,'Bn','LL',measurement_days)
-A_CI_BN_LL = make_data('ACI',21,'Bn','LL',measurement_days)
-plot_response('AI',A_I_BN_LL,measurement_days)
-plot_response('ACI',A_CI_BN_LL,measurement_days)
-
-# H.Icana LL
-measurement_days = [4,6,12]
-A_I_Hi_LL = make_data('AI',21,'Hi','LL',measurement_days)
-A_CI_Hi_LL = make_data('ACI',21,'Hi','LL',measurement_days)
-plot_response('AI',A_I_Hi_LL,measurement_days)
-plot_response('ACI',A_CI_Hi_LL,measurement_days)
-
-# B.Nigra HL
-measurement_days = [8,13]
-A_I_BN_HL = make_data('AI',21,'Bn','HL',measurement_days)
-A_CI_BN_HL = make_data('ACI',21,'Bn','HL',measurement_days)
-plot_response('AI',A_I_BN_HL,measurement_days)
-plot_response('ACI',A_CI_BN_HL,measurement_days)
-
-# H.Icana HL
-measurement_days = [5,11]
-A_I_Hi_HL = make_data('AI',21,'Hi','HL',measurement_days)
-A_CI_Hi_HL = make_data('ACI',21,'Hi','HL',measurement_days)
-plot_response('AI',A_I_Hi_HL,measurement_days)
-plot_response('ACI',A_CI_Hi_HL,measurement_days)
+A_I_BN_LL = make_data('Light',21,'Bn','LL',measurement_days)
+A_CI_BN_LL = make_data('CO2',21,'Bn','LL',measurement_days)
+plot_response('Light',A_I_BN_LL,measurement_days)
+plot_response('CO2',A_CI_BN_LL,measurement_days)
+#
+## H.Icana LL
+#measurement_days = [4,6,12]
+#A_I_Hi_LL = make_data('AI',21,'Hi','LL',measurement_days)
+#A_CI_Hi_LL = make_data('ACI',21,'Hi','LL',measurement_days)
+#plot_response('Light',A_I_Hi_LL,measurement_days)
+#plot_response('CO2',A_CI_Hi_LL,measurement_days)
+#
+## B.Nigra HL
+#measurement_days = [8,13]
+#A_I_BN_HL = make_data('AI',21,'Bn','HL',measurement_days)
+#A_CI_BN_HL = make_data('ACI',21,'Bn','HL',measurement_days)
+#plot_response('Light',A_I_BN_HL,measurement_days)
+#plot_response('CO2',A_CI_BN_HL,measurement_days)
+#
+## H.Icana HL
+#measurement_days = [5,11]
+#A_I_Hi_HL = make_data('AI',21,'Hi','HL',measurement_days)
+#A_CI_Hi_HL = make_data('ACI',21,'Hi','HL',measurement_days)
+#plot_response('Light',A_I_Hi_HL,measurement_days)
+#plot_response('CO2',A_CI_Hi_HL,measurement_days)
