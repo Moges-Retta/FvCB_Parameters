@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
-#PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\')
+PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
 
@@ -94,6 +94,30 @@ A_I_BN_LL = make_data('Light',21,'Bn','LL',measurement_days)
 A_CI_BN_LL = make_data('CO2',21,'Bn','LL',measurement_days)
 plot_response('Light',A_I_BN_LL,measurement_days)
 plot_response('CO2',A_CI_BN_LL,measurement_days)
+
+#FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
+
+columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
+AI = A_I_BN_LL[0]
+I = AI['PARi'].values
+A = AI['Photo'].values
+gs = AI['Cond'].values
+Ci = AI['Ci'].values
+PhiPS2 = AI['PhiPS2'].values
+Gas_Exchange_data = pd.DataFrame([],columns=columns )
+Gas_Exchange_data['Replicate'] = [1]*len(A_I_BN_LL[0])
+Gas_Exchange_data['Species'] = 'B.Nigra'
+Gas_Exchange_data['Treatment'] = 'LL'
+Gas_Exchange_data['Measurement type'] = 'A-I curve'
+Gas_Exchange_data['Oxygen level'] = [0.21]*len(A_I_BN_LL[0])
+Gas_Exchange_data['Net CO2 assimilation rate'] = A[:]
+Gas_Exchange_data['Intercellular CO2 concentration'] = Ci[:]
+Gas_Exchange_data['PhiPS2'] = PhiPS2[:]
+Gas_Exchange_data['Irradiance'] = I[:]
+Gas_Exchange_data['Stomatal conductance for CO2'] = gs[:]
+Gas_Exchange_data.to_excel(PATH+ 'Gas_Exchange_data.xlsx', index = False)
+
+
 #
 ## H.Icana LL
 #measurement_days = [4,6,12]
