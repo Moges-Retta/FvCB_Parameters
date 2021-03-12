@@ -81,6 +81,12 @@ def calculate_values():
     logo_label = tk.Label(image=logo)
     logo_label.image = logo
     logo_label.grid(column=0,row=3)
+    
+    logo = Image.open('A_BN_LL.png')
+    logo = ImageTk.PhotoImage(logo)
+    logo_label = tk.Label(image=logo)
+    logo_label.image = logo
+    logo_label.grid(column=1,row=3)
 
 frame_compute = tk.LabelFrame(root,text ="Calculate photosynthesis")
 frame_compute.grid(column=0,row=1)

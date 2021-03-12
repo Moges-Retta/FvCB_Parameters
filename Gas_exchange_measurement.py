@@ -20,6 +20,7 @@ class Gas_exchange_measurement:
     gs_CI= df_selected[df_selected['Measurement type']=='A-CI curve']
     gs_I= df_selected[df_selected['Measurement type']=='A-I curve']
 #    print(A_CI)
+    plt.rcParams["figure.figsize"] = (5,5)
 
     def __init__(self,O2,species,treatment):
             self.O2=O2
