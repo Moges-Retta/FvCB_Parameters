@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
+FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi','Trmmol','BLCond']
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -119,23 +119,23 @@ columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL
-measurement_days = [9,10,14,19]
+measurement_days = [10,14,19,23]
 A_I_BN_LL = make_data('Light',21,'Bn','LL',measurement_days)
 A_CI_BN_LL = make_data('CO2',21,'Bn','LL',measurement_days)
 
 #clean data
-data = A_I_BN_LL[3]
+data = A_I_BN_LL[2]
 data=data.drop([5]) # duplicate data for Pari = 200
-A_I_BN_LL[3]=[]
-A_I_BN_LL[3]=data
+A_I_BN_LL[2]=[]
+A_I_BN_LL[2]=data
 
-plot_response('Light',A_I_BN_LL,measurement_days)
-plot_response('CO2',A_CI_BN_LL,measurement_days)
+#plot_response('Light',A_I_BN_LL,measurement_days)
+#plot_response('CO2',A_CI_BN_LL,measurement_days)
 df_I=replicates_to_Excel(A_I_BN_LL,'B.Nigra',0.21,'A-I curve','LL')
 df_CI=replicates_to_Excel(A_CI_BN_LL,'B.Nigra',0.21,'A-CI curve','LL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
+#
 A_I_BN_LL = make_data('Light',2,'Bn','LL',measurement_days)
 A_CI_BN_LL = make_data('CO2',2,'Bn','LL',measurement_days)
 plot_response('Light',A_I_BN_LL,measurement_days)
@@ -144,57 +144,73 @@ df_I=replicates_to_Excel(A_I_BN_LL,'B.Nigra',0.02,'A-I curve','LL')
 df_CI=replicates_to_Excel(A_CI_BN_LL,'B.Nigra',0.02,'A-CI curve','LL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-  
-
+#  
+#
 # H.Incana LL
-measurement_days = [4,6,12,17,21]
+measurement_days = [6,12,17,21]
 A_I_Hi_LL = make_data('Light',21,'Hi','LL',measurement_days)
 A_CI_Hi_LL = make_data('CO2',21,'Hi','LL',measurement_days)
+
+#clean data
+data = A_I_Hi_LL[0]
+data=data.drop([4,6,8,10,12,14,16,18,20,22,24]) # duplicate data
+A_I_Hi_LL[0]=[]
+A_I_Hi_LL[0]=data
+
+#clean data
+data = A_CI_Hi_LL[0]
+data=data.drop([27,29,31,34,36,38,40,42,44,46,48,50,52,54]) # duplicate data
+A_CI_Hi_LL[0]=[]
+A_CI_Hi_LL[0]=data
+
+#clean data
+data = A_CI_Hi_LL[1]
+data=data.drop([17]) # duplicate data
+A_CI_Hi_LL[1]=[]
+A_CI_Hi_LL[1]=data
+
+
 plot_response('Light',A_I_Hi_LL,measurement_days)
 plot_response('CO2',A_CI_Hi_LL,measurement_days)
 df_I=replicates_to_Excel(A_I_Hi_LL,'H.Incana',0.21,'A-I curve','LL')
 df_CI=replicates_to_Excel(A_CI_Hi_LL,'H.Incana',0.21,'A-CI curve','LL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
-#clean data
-data = A_I_Hi_LL[0]
-data=data.drop([0,2,4,6,8,10,12,13,15,17,19,21,23,25,27]) # duplicate data
-A_I_Hi_LL[0]=[]
-A_I_Hi_LL[0]=data
-
-data = A_I_Hi_LL[1]
-data=data.drop([4,6,8,10,12,14,16,18,20,22,24]) # duplicate data
-A_I_Hi_LL[1]=[]
-A_I_Hi_LL[1]=data
-
+#
 
 A_I_Hi_LL = make_data('Light',2,'Hi','LL',measurement_days)
 A_CI_Hi_LL = make_data('CO2',2,'Hi','LL',measurement_days)
-
+#
 data = A_I_Hi_LL[0]
-data=data.drop([4,6,8,10,12,14,16,18,20,22,24]) # duplicate data
+data=data.drop([69]) # duplicate data
 A_I_Hi_LL[0]=[]
 A_I_Hi_LL[0]=data
-
-
-data = A_I_Hi_LL[1]
-data=data.drop([4,6,8,10,12,14,16,18,20,22,24]) # duplicate data
-A_I_Hi_LL[1]=[]
-A_I_Hi_LL[1]=data
-
+#
+#
+#
 plot_response('Light',A_I_Hi_LL,measurement_days)
 plot_response('CO2',A_CI_Hi_LL,measurement_days)
 df_I=replicates_to_Excel(A_I_Hi_LL,'H.Incana',0.02,'A-I curve','LL')
 df_CI=replicates_to_Excel(A_CI_Hi_LL,'H.Incana',0.02,'A-CI curve','LL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
-
+#
+#
 # B.Nigra HL
-measurement_days = [8,13,20]
+measurement_days = [7,8,13,20]
 A_I_BN_HL = make_data('Light',21,'Bn','HL',measurement_days)
 A_CI_BN_HL = make_data('CO2',21,'Bn','HL',measurement_days)
+
+data = A_I_BN_HL[0]
+data=data.drop([10,11]) # duplicate data
+A_I_BN_HL[0]=[]
+A_I_BN_HL[0]=data
+
+data = A_CI_BN_HL[3]
+data=data.drop([21]) # duplicate data
+A_CI_BN_HL[3]=[]
+A_CI_BN_HL[3]=data
+
 plot_response('Light',A_I_BN_HL,measurement_days)
 plot_response('CO2',A_CI_BN_HL,measurement_days)
 df_I=replicates_to_Excel(A_I_BN_HL,'B.Nigra',0.21,'A-I curve','HL')
@@ -204,32 +220,72 @@ Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 
 A_I_BN_HL = make_data('Light',2,'Bn','HL',measurement_days)
 A_CI_BN_HL = make_data('CO2',2,'Bn','HL',measurement_days)
+
+data = A_I_BN_HL[2]
+data=data.drop([43]) # duplicate data
+A_I_BN_HL[2]=[]
+A_I_BN_HL[2]=data
+
 plot_response('Light',A_I_BN_HL,measurement_days)
 plot_response('CO2',A_CI_BN_HL,measurement_days)
+
 df_I=replicates_to_Excel(A_I_BN_HL,'B.Nigra',0.02,'A-I curve','HL')
 df_CI=replicates_to_Excel(A_CI_BN_HL,'B.Nigra',0.02,'A-CI curve','HL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
-
+#
+#
 # H.Incana HL
-measurement_days = [5,11,18]
+measurement_days = [5,11,18,22]
 A_I_Hi_HL = make_data('Light',21,'Hi','HL',measurement_days)
 A_CI_Hi_HL = make_data('CO2',21,'Hi','HL',measurement_days)
+
+data = A_I_Hi_HL[0]
+data=data.drop([3,4,6,8,10,12,14,15,17,19,21,23,24,26,27,29,30]) # duplicate data
+A_I_Hi_HL[0]=[]
+A_I_Hi_HL[0]=data
+
+data = A_I_Hi_HL[1]
+data=data.drop([7,11]) # duplicate data
+A_I_Hi_HL[1]=[]
+A_I_Hi_HL[1]=data
+
+data = A_CI_Hi_HL[0]
+data=data.drop([33,35,37,39,42,44,50,51,53,55,57,59,60]) # duplicate data
+A_CI_Hi_HL[0]=[]
+A_CI_Hi_HL[0]=data
+
+
 plot_response('Light',A_I_Hi_HL,measurement_days)
 plot_response('CO2',A_CI_Hi_HL,measurement_days)
 df_I=replicates_to_Excel(A_I_Hi_HL,'H.Incana',0.21,'A-I curve','HL')
 df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.21,'A-CI curve','HL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
+#
 A_I_Hi_HL = make_data('Light',2,'Hi','HL',measurement_days)
 A_CI_Hi_HL = make_data('CO2',2,'Hi','HL',measurement_days)
+
+data = A_I_Hi_HL[1]
+data=data.drop([41]) # duplicate data
+A_I_Hi_HL[1]=[]
+A_I_Hi_HL[1]=data
+
+data = A_CI_Hi_HL[0]
+data=data.drop([62,64,66,68,70]) # duplicate data
+A_CI_Hi_HL[0]=[]
+A_CI_Hi_HL[0]=data
+
+data = A_CI_Hi_HL[2]
+data=data.drop([35]) # duplicate data
+A_CI_Hi_HL[2]=[]
+A_CI_Hi_HL[2]=data
+
 plot_response('Light',A_I_Hi_HL,measurement_days)
 plot_response('CO2',A_CI_Hi_HL,measurement_days)
 df_I=replicates_to_Excel(A_I_Hi_HL,'H.Incana',0.02,'A-I curve','HL')
 df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.02,'A-CI curve','HL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
-
+#
 Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
