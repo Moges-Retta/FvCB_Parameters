@@ -15,13 +15,10 @@ class Gas_exchange_measurement:
     data = pd.read_excel ('Gas_exchange_data.xlsx') 
     FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
     df_selected = data[FORMAT]
-#    print(df_selected)
     A_CI = df_selected[df_selected['Measurement type']=='A-CI curve']
     A_I= df_selected[df_selected['Measurement type']=='A-I curve']
     gs_CI= df_selected[df_selected['Measurement type']=='A-CI curve']
     gs_I= df_selected[df_selected['Measurement type']=='A-I curve']
-#    print(A_CI)
-#    plt.rcParams["figure.figsize"] = (5,5)
 
     def __init__(self,O2,species,treatment):
             self.O2=O2
@@ -134,7 +131,6 @@ class Gas_exchange_measurement:
             gs_ave=np.append(gs_ave, np.array([gs]).transpose(),axis=1)
             phiPS2_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
             
-        #self.plot_ave(I_ave,A_ave,"Gross photosynthesis (µmol m-2 s-1)","Irradiance (µmol m-2 s-1)")
         return [np.nanmean(I_ave,axis=1),np.nanmean(Ci_ave,axis=1),np.nanmean(A_ave,axis=1),np.nanmean(gs_ave,axis=1),np.nanmean(phiPS2_ave,axis=1),np.nanstd(A_ave,axis=1),np.nanstd(gs_ave,axis=1),np.nanstd(phiPS2_ave)]
      
         
@@ -247,9 +243,7 @@ class Gas_exchange_measurement:
             
         
         ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=16)
-#        ax[0][1].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")       
         ax[1][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
-#        ax[1][1].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
         ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
         ax[1][0].set_xlabel("Irradiance (µmol $mol^{-1}$)")   
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
@@ -308,9 +302,7 @@ class Gas_exchange_measurement:
             count+=1
         
         ax[0][0].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
-#        ax[0][1].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")       
         ax[1][0].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
-#        ax[1][1].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
         ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
         ax[1][0].set_xlabel("Irradiance (µmol $mol^{-1}$)")   
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
