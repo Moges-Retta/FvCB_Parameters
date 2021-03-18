@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-import itertools
+
 
 class Gas_exchange_measurement:
     data = pd.read_excel ('Gas_exchange_data.xlsx') 
@@ -167,9 +167,11 @@ class Gas_exchange_measurement:
     
     def show_significant(self,p_values,A,x,axis):
         m=[]
+        scale_factor=70 # to add p values to A       
+        p_values = [element * scale_factor for element in p_values]        
         y = p_values+A;
         for stat in p_values:                
-            if stat<0.05*70:
+            if stat<0.05*scale_factor:
                 m.append("*")
             else:
                 m.append("")
@@ -196,7 +198,6 @@ class Gas_exchange_measurement:
             err = A_CI_d['Std.dev A'].values
             ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_CI = self.t_test_A_CI('HL') 
-            stat_HL_CI = [element * 70 for element in stat_HL_CI]
 
             if plant == 'Hi':
                 self.show_significant(stat_HL_CI,AHL_CI,Ci,ax[0][0])
@@ -221,7 +222,6 @@ class Gas_exchange_measurement:
             
             ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_LL_CI = self.t_test_A_CI('LL')
-            stat_LL_CI = [element * 70 for element in stat_LL_CI]
 
             if plant == 'Hi':
                 self.show_significant(stat_LL_CI,ALL_CI,Ci,ax[0][1])           
@@ -235,13 +235,16 @@ class Gas_exchange_measurement:
             stat_LL_I = self.t_test_A_I('LL')
 
             if plant == 'Hi':
-                self.show_significant(stat_LL_I,ALL_I,Iinc,ax[1][1])           
-                                   
-            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,mfc='white',mec='black',markersize=8)
+                self.show_significant(stat_LL_I,ALL_I,Iinc,ax[1][1]) 
+                
+            if plant=='Hi':
+                name="H. Incana"
+            else:
+                name="B. Nigra"
+                      
+            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=name,mfc='white',mec='black',markersize=8)
             count+=1
             
-            stat_LL_I = self.t_test_A_I('LL')
-
         
         ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=16)
 #        ax[0][1].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")       
@@ -252,9 +255,11 @@ class Gas_exchange_measurement:
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
         ax[1][1].set_xlabel("Irradiance (µmol $mol^{-1}$)")
         ax[0][1].set_ylim(top=80)
-        ax[1][1].set_ylim(top=50)
+        ax[1][0].set_ylim(top=60)
+        ax[1][1].set_ylim(top=60)
+        
         ax[1][1].legend(loc='lower right', fontsize='x-large')     
-
+        fig.savefig('Compare_A_response.tiff', dpi=300, format="tiff", pil_kwargs={"compression": "tiff_lzw"})
 
     def compare_gs(self,df):
         fig, ax = plt.subplots(2,2,constrained_layout=True)
