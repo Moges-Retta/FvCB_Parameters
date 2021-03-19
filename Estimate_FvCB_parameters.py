@@ -40,44 +40,62 @@ class Estimate_FvCB_parameters:
                     ax[0][0].plot(X, Y, 'ko')           
                     ax[0][0].plot(X, ypredict, color='black', linewidth=3) 
                     ax[0][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
-                    ax[0][0].text(min(X)+1,max(Y)-1,text)
+                    ax[0][0].text(min(X)+1,max(Y)-3,text)
                     
                 elif replicate==2:
                     ax[0][1].plot(X, Y, 'ko')           
                     ax[0][1].plot(X, ypredict, color='black', linewidth=3)
-                    ax[0][1].text(min(X)+1,max(Y)-1,text)
+                    ax[0][1].text(min(X)+1,max(Y)-3,text)
                      
                 elif replicate==3:
                     ax[1][0].plot(X, Y, 'ko')         
                     ax[1][0].plot(X, ypredict, color='black', linewidth=3)
                     ax[1][0].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)') 
                     ax[1][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
-                    ax[1][0].text(min(X)+1,max(Y)-1,text)
+                    ax[1][0].text(min(X)+1,max(Y)-3,text)
                     
                 else:
                     ax[1][1].plot(X, Y, 'ko')           
                     ax[1][1].plot(X, ypredict, color='black', linewidth=3) 
                     ax[1][1].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)')
-                    ax[1][1].text(min(X)+1,max(Y)-1,text)
+                    ax[1][1].text(min(X)+1,max(Y)-3,text)
                 count+=1           
             plt.show()
             
             
-    def anova_test(self,df_params):
+    def anova_test_treatments(self,df_params):
         species = df_params['Species'].values
         species=np.unique(species)
         treatments=df_params['Treatment'].values
         treatments=np.unique(treatments)
         p_values = []
         for plant in species:
-            for treatment in treatments:                
-                data_rd  = df_params[df_params['Species']==plant]
-                data_rd  = data_rd[data_rd['Treatment']==treatment]       
-                Rds = data_rd['Rd'].values
-                [t,p]= stats.f_oneway(Rds)
-                p_values.append(p)
+            data_rd  = df_params[df_params['Species']==plant]
+            data_rd_1  = data_rd[data_rd['Treatment']==treatments[0]]  
+            data_rd_2  = data_rd[data_rd['Treatment']==treatments[1]]                       
+            Rds_1 = data_rd_1['Rd'].values
+            Rds_2 = data_rd_2['Rd'].values                
+            [t,p]= stats.ttest_ind(Rds_1,Rds_2, equal_var = False)
+            p_values.append(p)
         return p_values
             
+
+    def anova_test_species(self,df_params):
+        species = df_params['Species'].values
+        species=np.unique(species)
+        treatments=df_params['Treatment'].values
+        treatments=np.unique(treatments)
+        p_values = []
+        for treatment in treatments:
+            data_rd  = df_params[df_params['Treatment']==treatment]
+            data_rd_1  = data_rd[data_rd['Species']==species[0]]  
+            data_rd_2  = data_rd[data_rd['Species']==species[1]]                       
+            Rds_1 = data_rd_1['Rd'].values
+            Rds_2 = data_rd_2['Rd'].values                
+            [t,p]= stats.ttest_ind(Rds_1,Rds_2, equal_var = False)
+            p_values.append(p)
+        return p_values
+    
 # Estimate Rd and calibration factor s
     def estimate_Rd(self): 
         
