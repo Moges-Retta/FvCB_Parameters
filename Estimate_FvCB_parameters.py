@@ -96,6 +96,6 @@ class Estimate_FvCB_parameters:
             df2.loc[count,'Replicate'] = replicate
             count+=1
         self.plot_Rd(df,df2)
-            
+        return df    
             
             

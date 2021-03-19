@@ -61,6 +61,20 @@ class Gas_exchange_measurement:
         plt.show()
 
 
+    def get_AI_data(self):
+        A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
+        A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]
+        A_I_d = A_I_d[A_I_d['Treatment']==self.get_treatment()]
+        return A_I_d
+
+
+    def get_ACI_data(self):
+        A_CI_d  = self.A_CI[self.A_CI['Oxygen level']==self.get_O2()]
+        A_CI_d =  A_CI_d[A_CI_d['Species']==self.get_species()]
+        A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
+        return A_CI_d
+
+            
     def plot_A_I(self):
         A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
         A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]

@@ -5,6 +5,8 @@ Created on Tue Mar  9 20:02:52 2021
 @author: Moges Retta
 """
 from Gas_exchange_measurement import Gas_exchange_measurement
+from Estimate_FvCB_parameters import Estimate_FvCB_parameters
+
 import pandas as pd
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
@@ -33,11 +35,14 @@ for plant in species:
             df['Std.dev gs']=gs_std;df['Species']=plant; df['Treatment']=treatment; df['Response']='AI'; 
             ave_gas_Exchange_data=ave_gas_Exchange_data.append(df)
             
-#ave_gas_Exchange_data.to_excel(PATH + 'Ave_Gas_Exchange_data.xlsx', index = False)
+##ave_gas_Exchange_data.to_excel(PATH + 'Ave_Gas_Exchange_data.xlsx', index = False)
 
 species = 'B.Nigra'
-treatments = 'LL'
+treatment = 'LL'
 O = 0.21
+
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+
 [I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std] = gas_exch_measurement.average_A_CI()
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
@@ -67,7 +72,6 @@ gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 
-
 [I_ave_i,Ci_ave_i,A_ave_i,gs_ave_i,phiPS2,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_I()
 #gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
@@ -77,7 +81,6 @@ treatment = 'LL'
 O = 0.21
 
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-
 [I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_CI()
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
@@ -90,3 +93,54 @@ gas_exch_measurement.compare_A(ave_gas_Exchange_data)
 gas_exch_measurement.compare_gs(ave_gas_Exchange_data)
 gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
 
+# Estimate Rd values
+Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Std.err'])
+
+def Rd_tabel(Rds,species,treatment):
+        df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Std.err'])
+        df['Species']=[species]*4
+        df['Treatment']=[treatment]*4
+        df['Rd']=Rds['Rd'].values
+        df['Replicate']=Rds['Replicate'].values
+        df['Std.err']=Rds['Std.err'].values
+        return df
+
+species = 'H.Incana'
+treatment = 'LL'
+O = 0.02
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL = parameters.estimate_Rd()
+Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+species = 'H.Incana'
+treatment = 'HL'
+O = 0.02
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_HL = parameters.estimate_Rd()
+Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+
+species = 'B.Nigra'
+treatment = 'HL'
+O = 0.02
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Bn_HL = parameters.estimate_Rd()
+Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+
+species = 'B.Nigra'
+treatment = 'LL'
+O = 0.02
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Bn_LL = parameters.estimate_Rd()
+Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
