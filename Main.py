@@ -142,5 +142,6 @@ parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
 Rd_values=Rd_values.append(Rd)
+#p = parameters.anova_test(Rd_values)
 
-Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
+#Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)

@@ -62,6 +62,22 @@ class Estimate_FvCB_parameters:
                 count+=1           
             plt.show()
             
+            
+    def anova_test(self,df_params):
+        species = df_params['Species'].values
+        species=np.unique(species)
+        treatments=df_params['Treatment'].values
+        treatments=np.unique(treatments)
+        p_values = []
+        for plant in species:
+            for treatment in treatments:                
+                data_rd  = df_params[df_params['Species']==plant]
+                data_rd  = data_rd[data_rd['Treatment']==treatment]       
+                Rds = data_rd['Rd'].values
+                [t,p]= stats.f_oneway(Rds)
+                p_values.append(p)
+        return p_values
+            
 # Estimate Rd and calibration factor s
     def estimate_Rd(self): 
         
@@ -71,7 +87,7 @@ class Estimate_FvCB_parameters:
         """
         
         AI = self.gas_exch_measurement.get_AI_data()
-        AI=AI[AI['Irradiance']<230]
+        AI=AI[AI['Irradiance']<500]
         replicates = AI['Replicate'].values
         replicates=np.unique(replicates)
         df = pd.DataFrame([],columns=['Replicate','Rd','Std.err','R2','Slope']) 
