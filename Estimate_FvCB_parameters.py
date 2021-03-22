@@ -19,6 +19,7 @@ class Estimate_FvCB_parameters:
     def plot_Rd(self,Rds,points):
             fig, ax = plt.subplots(2,2,constrained_layout=True)
             replicates = Rds['Replicate'].values
+            plt.rcParams["figure.figsize"] = (10,10)
             count = 0
             for replicate in replicates:
                 Rd = Rds['Rd'].values
@@ -68,7 +69,8 @@ class Estimate_FvCB_parameters:
         species=np.unique(species)
         treatments=df_params['Treatment'].values
         treatments=np.unique(treatments)
-        p_values = []
+        p_values = pd.DataFrame([], columns=['Species','p value'])
+        count = 0
         for plant in species:
             data_rd  = df_params[df_params['Species']==plant]
             data_rd_1  = data_rd[data_rd['Treatment']==treatments[0]]  
@@ -76,7 +78,9 @@ class Estimate_FvCB_parameters:
             Rds_1 = data_rd_1['Rd'].values
             Rds_2 = data_rd_2['Rd'].values                
             [t,p]= stats.ttest_ind(Rds_1,Rds_2, equal_var = False)
-            p_values.append(p)
+            p_values.loc[count,'Species']=plant
+            p_values.loc[count,'p value']=p  
+            count+=1
         return p_values
             
 
@@ -85,7 +89,8 @@ class Estimate_FvCB_parameters:
         species=np.unique(species)
         treatments=df_params['Treatment'].values
         treatments=np.unique(treatments)
-        p_values = []
+        p_values = pd.DataFrame([], columns=['Treatment','p value'])
+        count = 0
         for treatment in treatments:
             data_rd  = df_params[df_params['Treatment']==treatment]
             data_rd_1  = data_rd[data_rd['Species']==species[0]]  
@@ -93,10 +98,12 @@ class Estimate_FvCB_parameters:
             Rds_1 = data_rd_1['Rd'].values
             Rds_2 = data_rd_2['Rd'].values                
             [t,p]= stats.ttest_ind(Rds_1,Rds_2, equal_var = False)
-            p_values.append(p)
+            count+=1
+            p_values.loc[count,'Treatment']=treatment            
+            p_values.loc[count,'p value']=p              
         return p_values
     
-# Estimate Rd and calibration factor s
+# Estimate Rd 
     def estimate_Rd(self): 
         
         """
@@ -105,7 +112,7 @@ class Estimate_FvCB_parameters:
         """
         
         AI = self.gas_exch_measurement.get_AI_data()
-        AI=AI[AI['Irradiance']<500]
+        AI=AI[AI['Irradiance']<350]
         replicates = AI['Replicate'].values
         replicates=np.unique(replicates)
         df = pd.DataFrame([],columns=['Replicate','Rd','Std.err','R2','Slope']) 

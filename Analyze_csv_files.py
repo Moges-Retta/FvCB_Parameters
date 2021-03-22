@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-FORMAT = ['Photo','Cond','Ci',"Fv'/Fm'", 'PhiPS2','CO2R','PARi','Trmmol','BLCond']
+FORMAT = ['Photo','Cond','Ci',"Fv'/Fm'", 'PhiPS2','CO2S','PARi','Trmmol','BLCond']
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -94,7 +94,7 @@ def plot_response(treatment,data,measurement_days):
 #FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
 
 def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
-    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
+    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
     Gas_Exchange_data = pd.DataFrame([],columns=columns )
     for i in range(0,len(data_frame)):
         AI = data_frame[i]
@@ -102,6 +102,10 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         A = AI['Photo'].values
         gs = AI['Cond'].values
         Ci = AI['Ci'].values
+        CO2S = AI['CO2S'].values
+        Trmmol = AI['Trmmol'].values
+        BLCond = AI['BLCond'].values
+        
         PhiPS2 = AI['PhiPS2'].values
         df1 = pd.DataFrame([],columns=columns )
         df1['Replicate'] = [i+1]*len(data_frame[i])
@@ -114,10 +118,14 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         df1['PhiPS2'] = PhiPS2[:]
         df1['Irradiance'] = I[:]
         df1['Stomatal conductance for CO2'] = gs[:]
+        df1['CO2S'] = CO2S[:]
+        df1['Trmmol'] = Trmmol[:]
+        df1['BLCond'] = BLCond[:]
+        
         Gas_Exchange_data=Gas_Exchange_data.append(df1)
     return Gas_Exchange_data
   
-columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2']
+columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL
@@ -351,4 +359,4 @@ df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.02,'A-CI curve','HL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 #
-Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
+#Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)

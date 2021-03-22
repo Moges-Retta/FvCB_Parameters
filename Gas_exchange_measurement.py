@@ -10,9 +10,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
+PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
+
 
 class Gas_exchange_measurement:
-    data = pd.read_excel ('Gas_exchange_data.xlsx') 
+    data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
+#    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
     FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
     df_selected = data[FORMAT]
     A_CI = df_selected[df_selected['Measurement type']=='A-CI curve']
@@ -192,7 +195,7 @@ class Gas_exchange_measurement:
         fig, ax = plt.subplots(2,2,constrained_layout=True)
         plt.rcParams["figure.figsize"] = (10,10)
         
-        plants = ['Hi','BN']
+        plants = ['H.Incana','B.Nigra']
         count = 0
         symbol=['ko','k<']
         for plant in plants:                
@@ -267,7 +270,7 @@ class Gas_exchange_measurement:
         ax[1][1].set_ylim(top=60)
         
         ax[1][1].legend(loc='lower right', fontsize='x-large')     
-        fig.savefig('Compare_A_response.tiff', dpi=300, format="tiff", pil_kwargs={"compression": "tiff_lzw"})
+#        fig.savefig('Compare_A_response.tiff', dpi=300, format="tiff", pil_kwargs={"compression": "tiff_lzw"})
 
     def compare_gs(self,df):
         fig, ax = plt.subplots(2,2,constrained_layout=True)
@@ -432,3 +435,56 @@ class Gas_exchange_measurement:
             p_values.append(p)
         return p_values
              
+    
+    def correct_leak(self):
+        columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
+        Gas_Exchange_data_corr = pd.DataFrame([],columns=columns )
+        ACI_corr = self.A_CI;
+        AI_corr = self.A_I;
+        cond = ACI_corr['Stomatal conductance for CO2'].values
+        blcond = ACI_corr['BLCond'].values
+        trmmol = ACI_corr['Trmmol'].values        
+        photo = ACI_corr['Net CO2 assimilation rate'].values
+        co2s = ACI_corr['CO2S'].values
+
+        model = 0.0006*co2s - 0.4661
+        gbl_corr = 1/(1/cond+1.37/blcond)
+        photo_corr = photo-model
+        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s-photo)/(gbl_corr+trmmol/1000/2)
+        
+        ACI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
+        ACI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr        
+        
+        Gas_Exchange_data_corr= Gas_Exchange_data_corr.append(ACI_corr)
+        
+        cond = AI_corr['Stomatal conductance for CO2'].values
+        blcond = AI_corr['BLCond'].values
+        trmmol = AI_corr['Trmmol'].values        
+        photo = AI_corr['Net CO2 assimilation rate'].values
+        co2s = AI_corr['CO2S'].values
+
+        model = 0.0006*co2s - 0.4661
+        gbl_corr = 1/(1/cond+1.37/blcond)
+        photo_corr = photo-model
+        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s-photo)/(gbl_corr+trmmol/1000/2)
+        
+        AI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
+        AI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr     
+        
+        Gas_Exchange_data_corr=Gas_Exchange_data_corr.append(AI_corr)
+        
+#        FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
+#        Gas_Exchange_data_corr = Gas_Exchange_data_corr[FORMAT]
+#        
+#        Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
+        return Gas_Exchange_data_corr
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
