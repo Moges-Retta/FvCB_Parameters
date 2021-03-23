@@ -14,7 +14,7 @@ PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
 
 class Gas_exchange_measurement:
-    data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
+    data = pd.read_excel ('Gas_Exchange_data.xlsx') 
 #    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
     FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
     df_selected = data[FORMAT]

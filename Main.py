@@ -96,15 +96,17 @@ gas_exch_measurement.compare_gs(ave_gas_Exchange_data)
 gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
 
 # Estimate Rd values
-Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Std.err'])
+Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
 
 def Rd_tabel(Rds,species,treatment):
-        df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Std.err'])
+        df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
         df['Species']=[species]*4
         df['Treatment']=[treatment]*4
         df['Rd']=Rds['Rd'].values
         df['Replicate']=Rds['Replicate'].values
         df['Std.err']=Rds['Std.err'].values
+        df['Slope']=Rds['Slope'].values
+        
         return df
 
 species = 'H.Incana'
@@ -147,13 +149,13 @@ Rd_values=Rd_values.append(Rd)
 p_treatment = parameters.anova_test_treatments(Rd_values)
 p_species = parameters.anova_test_species(Rd_values)
 
-#Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
+#Rd_values.to_excel(PATH + 'Parameters_Rd_300_corr.xlsx', index = False)
 boxplot = Rd_values.boxplot(column=['Rd'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1))
 boxplot[0].set_ylabel('R$_d$ (µmol $m^{-2}$ $s^{-1}$)')
 boxplot.set_title('')
 
 # Corrected gas exchange data
-Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Std.err'])
+Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
 
 species = 'H.Incana'
 treatment = 'LL'
@@ -199,7 +201,7 @@ Rd_values=Rd_values.append(Rd)
 p_treatment = parameters.anova_test_treatments(Rd_values)
 p_species = parameters.anova_test_species(Rd_values)
 
-Rd_values.to_excel(PATH + 'Parameters_Rd_corr.xlsx', index = False)
+#Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
 
 
 # Compare effect of leak correction on photosynthesis rate
@@ -260,3 +262,4 @@ ax[0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
 ax[1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
 ax[1].legend(loc='lower right')  
 plt.show()
+

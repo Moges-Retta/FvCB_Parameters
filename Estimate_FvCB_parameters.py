@@ -103,7 +103,7 @@ class Estimate_FvCB_parameters:
             p_values.loc[count,'p value']=p              
         return p_values
     
-# Estimate Rd 
+# Estimate Rd and calibration factor s
     def estimate_Rd(self): 
         
         """
@@ -125,13 +125,13 @@ class Estimate_FvCB_parameters:
             PhiPS2 = A_I_r['PhiPS2'].values
             A = A_I_r['Net CO2 assimilation rate'].values
             X = PhiPS2*I/4
-            slope, intercept, r_value, p_value, std_err  = stats.linregress(X, A) #slope, intercept, r, p, se 
-            df.loc[count,'Rd'] = intercept
-            df.loc[count,'Std.err'] = std_err
-            df.loc[count,'R2'] = r_value**2
+            result = stats.linregress(X, A) #slope, intercept, r, p, se 
+            df.loc[count,'Rd'] = result.intercept
+#            df.loc[count,'Std.err Rd'] = result.intercept_stderr
+            df.loc[count,'R2'] = result.rvalue**2
             df.loc[count,'Replicate'] = replicate
-            df.loc[count,'Slope'] = slope
-            
+            df.loc[count,'Slope'] = result.slope
+            df.loc[count,'Std.err'] = result.stderr            
             df2.loc[count,'X'] = X
             df2.loc[count,'Y'] = A
             df2.loc[count,'Replicate'] = replicate
