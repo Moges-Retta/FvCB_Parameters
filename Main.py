@@ -263,3 +263,14 @@ ax[1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
 ax[1].legend(loc='lower right')  
 plt.show()
 
+# Estimate Jmax
+
+species = 'B.Nigra'
+treatment = 'LL'
+O = 0.21
+s = 0.524
+gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+phi2LL = parameters.estimate_phi2LL()
+inputs = {'s':s,'phi2LL':phi2LL[0][0]}
+Jmax = parameters.estimate_Jmax(inputs)

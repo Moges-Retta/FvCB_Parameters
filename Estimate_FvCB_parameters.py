@@ -160,7 +160,28 @@ class Estimate_FvCB_parameters:
         J_mod = (k2LL*Iinc+Jmax-SQ)/(2*theta)            
         return J_mod-J 
     
-    
+    def plot_Jmax_fit(self,params,inputs): 
+        plt.rcParams["figure.figsize"] = (10,10)
+
+        Iave,Ci,A,gs,phiPS2,std_A,std_gs,std_phiPS2 = self.gas_exch_measurement.average_A_I()
+        
+        PHI2LL = inputs.get('phi2LL')
+        Jmax,theta = params
+        s = inputs.get('s')
+        k2LL = s*PHI2LL
+#        Iinc = AI[0]
+#        phiPS2 = AI['PhiPS2'].values
+        J = s*Iave*phiPS2
+        SQ = ((k2LL*Iave+Jmax)**2-4*theta*k2LL*Jmax*Iave)**0.5
+        J_mod = (k2LL*Iave+Jmax-SQ)/(2*theta) 
+        fig, ax = plt.subplots()
+        ax.errorbar(Iave,J,std_phiPS2*J,fmt='ko',label='CF') 
+        plt.plot(Iave,J_mod,'k-',linewidth=2.0,label='Model')  
+        ax.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)')
+        ax.set_ylabel('ATP production (µmol $m^{-2}$ $s^{-1}$)')  
+        ax.legend(loc='lower right', fontsize='x-large')  
+        
+        
 # Estimate phi2LL
     def model_phi2LL(self,params): 
         
@@ -178,12 +199,12 @@ class Estimate_FvCB_parameters:
         phiPS2 = AI['PhiPS2'].values
         alpha2LL = (1-fcyc)*PHI2LL/((1-fcyc)+PHI2LL/phi1LL)
         SQ = ((alpha2LL*Iabs+J2max)**2-4*theta2*alpha2LL*J2max*Iabs)**0.5 
-        phiPS2_model = PHI2LL*(alpha2LL*Iabs+J2max-SQ)/(2*theta2*alpha2LL*Iabs);            
+        phiPS2_model = PHI2LL*(alpha2LL*Iabs+J2max-SQ)/(2*theta2*alpha2LL*Iabs)       
         return phiPS2-phiPS2_model
 
     def estimate_phi2LL(self):
         bnds=((0,0,0),(1,1,700)) 
-        x0 = np.array([0.78,0.7,150])                
+        x0 = np.array([0.78,0.7,150])       #phi2LL,thetha,J2max         
         result = optimize.least_squares(self.model_phi2LL,x0,method='trf',bounds=bnds)
         res = self.model_phi2LL(result.x)
         J = np.array(result.jac)
@@ -205,7 +226,7 @@ class Estimate_FvCB_parameters:
             return []        
         
         
-    def estimate_Jmax(self):
+    def estimate_Jmax(self,inputs):
         bnds=((0,0.5),(700,1)) #lb,ub
         x0 = np.array([150,0.7])        
         result = optimize.least_squares(self.model_Jmax,x0,method='trf',bounds=bnds)
@@ -220,6 +241,7 @@ class Estimate_FvCB_parameters:
         var_1 = np.sqrt(var_1)
         var_2 = np.sqrt(var_2)
         if result.success:
+            self.plot_Jmax_fit(result.x,inputs)
             return [result.x,var_1,var_2]
         else:
             raise ValueError(result.message)
