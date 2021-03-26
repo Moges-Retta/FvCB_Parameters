@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-FORMAT = ['Photo','Cond','Ci',"Fv'/Fm'", 'PhiPS2','CO2S','PARi','Trmmol','BLCond']
+FORMAT = ['Photo','Cond','Ci',"Fv/Fm", 'PhiPS2','CO2S','PARi','Trmmol','BLCond']
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -51,7 +51,7 @@ def plot_response(treatment,data,measurement_days):
                 A = ACI['Photo'].values
                 gs = ACI['Cond'].values
                 PhiPS2 = ACI['PhiPS2'].values.astype(float)
-                FvFm = ACI["Fv'/Fm'"].values.astype(float)
+                FvFm = ACI["Fv/Fm"].values.astype(float)
                 ax[0][0].plot(np.sort(Ci,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
                 ax[0][1].plot(np.sort(Ci,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
                 ax[1][0].plot(np.sort(Ci,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
@@ -62,7 +62,7 @@ def plot_response(treatment,data,measurement_days):
                 ax[1][1].set_ylabel("Fv/Fm (-)")
                 ax[1][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
                 ax[1][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
-#                ax[1][1].set_ylim(bottom=0.7)
+                ax[1][1].set_ylim(bottom=0.7)
                 ax[1][1].legend(loc='lower right', fontsize='x-large')     
                 
     else:
@@ -74,7 +74,7 @@ def plot_response(treatment,data,measurement_days):
             A = AI['Photo'].values
             gs = AI['Cond'].values
             PhiPS2 = AI['PhiPS2'].values.astype(float)
-            FvFm = AI["Fv'/Fm'"].values.astype(float)
+            FvFm = AI["Fv/Fm"].values.astype(float)
             ax[0][0].plot(np.sort(I,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
             ax[0][1].plot(np.sort(I,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
             ax[1][0].plot(np.sort(I,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
@@ -82,10 +82,10 @@ def plot_response(treatment,data,measurement_days):
             ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
             ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
             ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
-            ax[1][1].set_ylabel("Fv'/Fm' (-)")
+            ax[1][1].set_ylabel("Fv/Fm (-)")
             ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
             ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
-#            ax[1][1].set_ylim(bottom=0.7)
+            ax[1][1].set_ylim(bottom=0.7)
 #    ax.tick_params(labelsize='medium', width=5)
             ax[1][1].legend(loc='lower right', fontsize='x-large')     
     
