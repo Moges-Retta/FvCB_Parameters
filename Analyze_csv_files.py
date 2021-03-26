@@ -227,8 +227,6 @@ data=data.drop([69]) # duplicate data
 A_I_Hi_LL[0]=[]
 A_I_Hi_LL[0]=data
 #
-#
-#
 #plot_response('Light',A_I_Hi_LL,measurement_days)
 #plot_response('CO2',A_CI_Hi_LL,measurement_days)
 df_I=replicates_to_Excel(A_I_Hi_LL,'H.Incana',0.02,'A-I curve','LL')

@@ -463,7 +463,7 @@ class Gas_exchange_measurement:
         photo = AI_corr['Net CO2 assimilation rate'].values
         co2s = AI_corr['CO2S'].values
 
-        model = 0.0006*co2s - 0.4661
+        model = 0.0006*co2s - 0.4661  # leak correction model
         gbl_corr = 1/(1/cond+1.37/blcond)
         photo_corr = photo-model
         ci_corr = ((gbl_corr-trmmol/1000/2)*co2s-photo)/(gbl_corr+trmmol/1000/2)

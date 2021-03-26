@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
+from scipy import optimize
 
 class Estimate_FvCB_parameters:
     def __init__(self,gas_exch_measurement):
@@ -138,5 +139,88 @@ class Estimate_FvCB_parameters:
             count+=1
         self.plot_Rd(df,df2)
         return df    
-            
-            
+   
+         
+# Estimate Jmax
+    def model_Jmax(self,params): 
+        
+        """
+        Estimate Jmax, curvature factor (theta) and quantum efficiency of PSII
+        e flow at strictly limiting light level (Phi2LL)
+        """
+        AI = self.gas_exch_measurement.get_AI_data()
+        PHI2LL = 0.7799
+        Jmax,theta = params
+        s = 0.517
+        k2LL = s*PHI2LL
+        Iinc = AI['Irradiance'].values
+        phiPS2 = AI['PhiPS2'].values
+        J = s*Iinc*phiPS2
+        SQ = ((k2LL*Iinc+Jmax)**2-4*theta*k2LL*Jmax*Iinc)**0.5
+        J_mod = (k2LL*Iinc+Jmax-SQ)/(2*theta)            
+        return J_mod-J 
+    
+    
+# Estimate phi2LL
+    def model_phi2LL(self,params): 
+        
+        """
+        Estimate the quantum efficiency of PSII
+        e flow at strictly limiting light level (Phi2LL)
+        """
+        AI = self.gas_exch_measurement.get_AI_data()
+        PHI2LL,theta2,J2max = params
+        phi1LL = 1
+        fcyc = 0
+        absor = 0.90
+        Iinc = AI['Irradiance'].values
+        Iabs = Iinc*absor
+        phiPS2 = AI['PhiPS2'].values
+        alpha2LL = (1-fcyc)*PHI2LL/((1-fcyc)+PHI2LL/phi1LL)
+        SQ = ((alpha2LL*Iabs+J2max)**2-4*theta2*alpha2LL*J2max*Iabs)**0.5 
+        phiPS2_model = PHI2LL*(alpha2LL*Iabs+J2max-SQ)/(2*theta2*alpha2LL*Iabs);            
+        return phiPS2-phiPS2_model
+
+    def estimate_phi2LL(self):
+        bnds=((0,0,0),(1,1,700)) 
+        x0 = np.array([0.78,0.7,150])                
+        result = optimize.least_squares(self.model_phi2LL,x0,method='trf',bounds=bnds)
+        res = self.model_phi2LL(result.x)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-3;
+        G=np.linalg.inv(H);
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_3=2*S*G[2,2]/degfr;
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        var_3 = np.sqrt(var_3)
+   
+        if result.success:
+            return [result.x,var_1,var_2,var_3]
+        else:
+            raise ValueError(result.message)
+            return []        
+        
+        
+    def estimate_Jmax(self):
+        bnds=((0,0.5),(700,1)) #lb,ub
+        x0 = np.array([150,0.7])        
+        result = optimize.least_squares(self.model_Jmax,x0,method='trf',bounds=bnds)
+        res = self.model_Jmax(result.x)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-2;
+        G=np.linalg.inv(H);
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        if result.success:
+            return [result.x,var_1,var_2]
+        else:
+            raise ValueError(result.message)
+            return []
