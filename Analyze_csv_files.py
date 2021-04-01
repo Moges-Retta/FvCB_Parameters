@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-FORMAT = ['Photo','Cond','Ci',"Fv/Fm", 'PhiPS2','CO2S','PARi','Trmmol','BLCond']
+FORMAT = ['Photo','Cond','Ci',"CO2R",'CO2S','PhiPS2','CO2S','PARi','Trmmol','BLCond']
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -51,17 +51,18 @@ def plot_response(treatment,data,measurement_days):
                 A = ACI['Photo'].values
                 gs = ACI['Cond'].values
                 PhiPS2 = ACI['PhiPS2'].values.astype(float)
-                FvFm = ACI["Fv/Fm"].values.astype(float)
-                ax[0][0].plot(np.sort(Ci,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
-                ax[0][1].plot(np.sort(Ci,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
-                ax[1][0].plot(np.sort(Ci,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
-                ax[1][1].plot(np.sort(Ci,axis=None), np.sort(FvFm,axis=None),symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
+                CO2R = ACI["CO2R"].values.astype(float)
+#                CO2S = ACI["CO2S"].values.astype(float)                
+                ax[0][0].plot(Ci, A,symbol,fillstyle='none',markersize=8)
+                ax[0][1].plot(Ci, gs,symbol,fillstyle='none',markersize=8)
+                ax[1][0].plot(Ci, PhiPS2,symbol,fillstyle='none',markersize=8)
+                ax[1][1].plot(Ci, CO2R,symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
                 ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
                 ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
                 ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
-                ax[1][1].set_ylabel("Fv/Fm (-)")
+                ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
                 ax[1][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
-                ax[1][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
+                ax[1][1].set_xlabel("External $CO_2$ (µmol $mol^{-1}$)")
                 ax[1][1].set_ylim(bottom=0.7)
                 ax[1][1].legend(loc='lower right', fontsize='x-large')     
                 
@@ -74,15 +75,15 @@ def plot_response(treatment,data,measurement_days):
             A = AI['Photo'].values
             gs = AI['Cond'].values
             PhiPS2 = AI['PhiPS2'].values.astype(float)
-            FvFm = AI["Fv/Fm"].values.astype(float)
-            ax[0][0].plot(np.sort(I,axis=None), np.sort(A,axis=None),symbol,fillstyle='none',markersize=8)
-            ax[0][1].plot(np.sort(I,axis=None), np.sort(gs,axis=None),symbol,fillstyle='none',markersize=8)
-            ax[1][0].plot(np.sort(I,axis=None), np.sort(PhiPS2,axis=None),symbol,fillstyle='none',markersize=8)
-            ax[1][1].plot(np.sort(I,axis=None), np.sort(FvFm,axis=None),symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
+            Ci = AI["Ci"].values
+            ax[0][0].plot(I, A,symbol,fillstyle='none',markersize=8)
+            ax[0][1].plot(I, gs,symbol,fillstyle='none',markersize=8)
+            ax[1][0].plot(I, PhiPS2,symbol,fillstyle='none',markersize=8)
+            ax[1][1].plot(I, Ci,symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
             ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
             ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
             ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
-            ax[1][1].set_ylabel("Fv/Fm (-)")
+            ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
             ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
             ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
             ax[1][1].set_ylim(bottom=0.7)
@@ -94,7 +95,7 @@ def plot_response(treatment,data,measurement_days):
 #FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
 
 def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
-    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
+    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond']
     Gas_Exchange_data = pd.DataFrame([],columns=columns )
     for i in range(0,len(data_frame)):
         AI = data_frame[i]
@@ -103,6 +104,8 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         gs = AI['Cond'].values
         Ci = AI['Ci'].values
         CO2S = AI['CO2S'].values
+        CO2R = AI['CO2R'].values
+        
         Trmmol = AI['Trmmol'].values
         BLCond = AI['BLCond'].values
         
@@ -119,13 +122,14 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         df1['Irradiance'] = I[:]
         df1['Stomatal conductance for CO2'] = gs[:]
         df1['CO2S'] = CO2S[:]
+        df1['CO2R'] = CO2R[:]        
         df1['Trmmol'] = Trmmol[:]
         df1['BLCond'] = BLCond[:]
         
         Gas_Exchange_data=Gas_Exchange_data.append(df1)
     return Gas_Exchange_data
   
-columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
+columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond']
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL

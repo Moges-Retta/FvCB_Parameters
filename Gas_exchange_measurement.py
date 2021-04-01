@@ -437,20 +437,38 @@ class Gas_exchange_measurement:
              
     
     def correct_leak(self):
-        columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
+        """
+        Correct for leakage
+        1. correction for CO2s based on linear relationship between CO2R-CO2S and
+        CO2R
+        2. correct CO2s for main measurement using the above model
+        3. recalculate gbc and Ci and photo  
+        """
+        columns = ['Replicate','Species','Treatment','Measurement type',\
+                   'Oxygen level','Net CO2 assimilation rate',\
+                   'Intercellular CO2 concentration','PhiPS2','Irradiance',\
+                   'Stomatal conductance for CO2','CO2R','CO2S','H2OR','H2OS',\
+                   'Flow','Area','Trmmol','BLCond']
         Gas_Exchange_data_corr = pd.DataFrame([],columns=columns )
         ACI_corr = self.A_CI;
         AI_corr = self.A_I;
         cond = ACI_corr['Stomatal conductance for CO2'].values
         blcond = ACI_corr['BLCond'].values
         trmmol = ACI_corr['Trmmol'].values        
-        photo = ACI_corr['Net CO2 assimilation rate'].values
-        co2s = ACI_corr['CO2S'].values
+#        photo = ACI_corr['Net CO2 assimilation rate'].values
+        CO2S = ACI_corr['CO2S'].values
+        CO2R = ACI_corr['CO2R'].values
+        H2OR = ACI_corr['H2OR'].values
+        H2OS = ACI_corr['H2OS'].values
+        flow = ACI_corr['Flow'].values
+        area = ACI_corr['Area'].values
 
-        model = 0.0006*co2s - 0.4661
+        model_delta_co2 = 0.0006*CO2R - 0.4661 # correct for CO2s
+        co2s_corrected = CO2S+model_delta_co2
+        a = (1000-H2OR)/(1000-H2OS)        
+        photo_corr = flow*(CO2R-co2s_corrected*a/(100*area))           
         gbl_corr = 1/(1/cond+1.37/blcond)
-        photo_corr = photo-model
-        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s-photo)/(gbl_corr+trmmol/1000/2)
+        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/1000/2)
         
         ACI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
         ACI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr        
@@ -460,13 +478,19 @@ class Gas_exchange_measurement:
         cond = AI_corr['Stomatal conductance for CO2'].values
         blcond = AI_corr['BLCond'].values
         trmmol = AI_corr['Trmmol'].values        
-        photo = AI_corr['Net CO2 assimilation rate'].values
-        co2s = AI_corr['CO2S'].values
+        CO2S = AI_corr['CO2S'].values
+        CO2R = AI_corr['CO2R'].values
+        H2OR = AI_corr['H2OR'].values
+        H2OS = AI_corr['H2OS'].values
+        flow = AI_corr['Flow'].values
+        area = AI_corr['Area'].values
 
-        model = 0.0006*co2s - 0.4661  # leak correction model
+        model_delta_co2 = 0.0006*CO2R - 0.4661 # correct for CO2s
+        co2s_corrected = CO2S+model_delta_co2
+        a = (1000-H2OR)/(1000-H2OS)        
+        photo_corr = flow*(CO2R-co2s_corrected*a/(100*area))           
         gbl_corr = 1/(1/cond+1.37/blcond)
-        photo_corr = photo-model
-        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s-photo)/(gbl_corr+trmmol/1000/2)
+        ci_corr = ((gbl_corr-trmmol/1000/2)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/1000/2)
         
         AI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
         AI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr     
