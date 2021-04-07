@@ -9,6 +9,7 @@ from Estimate_FvCB_parameters import Estimate_FvCB_parameters
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from scipy import stats
 
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
@@ -97,6 +98,7 @@ gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
 
 # Estimate Rd values
 Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
+Rd_values_O2 = Rd_values;
 
 def Rd_tabel(Rds,species,treatment):
         df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
@@ -115,6 +117,13 @@ O = 0.02
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Hi_LL = parameters.estimate_Rd()
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
 Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
 Rd_values=Rd_values.append(Rd)
 
@@ -127,6 +136,11 @@ Rd_Hi_HL = parameters.estimate_Rd()
 Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
 Rd_values=Rd_values.append(Rd)
 
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
 
 species = 'B.Nigra'
 treatment = 'HL'
@@ -137,6 +151,11 @@ Rd_Bn_HL = parameters.estimate_Rd()
 Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
 Rd_values=Rd_values.append(Rd)
 
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
 
 species = 'B.Nigra'
 treatment = 'LL'
@@ -146,122 +165,165 @@ parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
 Rd_values=Rd_values.append(Rd)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
 p_treatment = parameters.anova_test_treatments(Rd_values)
 p_species = parameters.anova_test_species(Rd_values)
 
-#Rd_values.to_excel(PATH + 'Parameters_Rd_300_corr.xlsx', index = False)
+p_treatment = parameters.anova_test_treatments(Rd_values_O2)
+p_species = parameters.anova_test_species(Rd_values_O2)
+
+# Compare Rd between 2 % O2 and 21 % O2 
+plants = Rd_values['Species'].unique()
+treatments = Rd_values['Treatment'].unique()
+replicates = Rd_values['Replicate'].unique()
+cols = ['Species','Treatment','p']
+compare_Rd_O2_level = pd.DataFrame([],columns = cols)
+for plant in plants:
+    x = Rd_values[Rd_values['Species']==plant]
+    y = Rd_values_O2[Rd_values_O2['Species']==plant]    
+    for treatment in treatments:
+        df=pd.DataFrame([],columns=cols)
+        xd = x[x['Treatment']==treatment]
+        yd = y[y['Treatment']==treatment]            
+        rd1 = xd['Rd'].values
+        rd2 = yd['Rd'].values
+        [t,p]= stats.ttest_ind(rd1,rd2, equal_var = False)
+        df.loc[0,'Species']=plant
+        df.loc[0,'Treatment']=treatment
+        df.loc[0,'p']=p       
+        compare_Rd_O2_level = compare_Rd_O2_level.append(df)
+#Rd_values.to_excel(PATH + 'Parameters_Rd_300.xlsx', index = False)
+#Rd_values_O2.to_excel(PATH + 'Parameters_Rd_300_21_O2.xlsx', index = False)
+
+#file_path = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\Parameters_Rd_300.xlsx')
+#df_old = pd.read_excel('Parameters_Rd_300.xlsx')
+#df_old2 = pd.read_excel('Parameters_Rd_300_21_O2.xlsx')
+#writer = pd.ExcelWriter(file_path, engine = 'xlsxwriter')
+#df_old.to_excel(writer, sheet_name = 'Rd 2% O2')
+#Rd_values_O2.to_excel(writer, sheet_name = 'Rd 21% O2')
+#compare_Rd_O2_level.to_excel(writer, sheet_name = 'compare_2_21_O2-770')
+#writer.save()
+#writer.close()
+        
+
 boxplot = Rd_values.boxplot(column=['Rd'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1))
 boxplot[0].set_ylabel('R$_d$ (µmol $m^{-2}$ $s^{-1}$)')
 boxplot.set_title('')
 
-# Corrected gas exchange data
-Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
-
-species = 'H.Incana'
-treatment = 'LL'
-O = 0.02
+## Corrected gas exchange data
+#Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
+#
+#species = 'H.Incana'
+#treatment = 'LL'
+#O = 0.02
+##gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+##corrected_data = gas_exch_measurement.correct_leak()
 #gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-#corrected_data = gas_exch_measurement.correct_leak()
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+#
+#parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+#Rd_Hi_LL = parameters.estimate_Rd()
+#Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
+#Rd_values=Rd_values.append(Rd)
+#
+#
+#species = 'H.Incana'
+#treatment = 'HL'
+#O = 0.02
+#gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+#parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+#Rd_Hi_HL = parameters.estimate_Rd()
+#Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
+#Rd_values=Rd_values.append(Rd)
+#
+#
+#species = 'B.Nigra'
+#treatment = 'HL'
+#O = 0.02
+#gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+#parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+#Rd_Bn_HL = parameters.estimate_Rd()
+#Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
+#Rd_values=Rd_values.append(Rd)
+#
+#
+#species = 'B.Nigra'
+#treatment = 'LL'
+#O = 0.02
+#gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+#parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+#Rd_Bn_LL = parameters.estimate_Rd()
+#Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+#Rd_values=Rd_values.append(Rd)
+#p_treatment = parameters.anova_test_treatments(Rd_values)
+#p_species = parameters.anova_test_species(Rd_values)
+#
+##Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
 
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL = parameters.estimate_Rd()
-Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-
-species = 'H.Incana'
-treatment = 'HL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_HL = parameters.estimate_Rd()
-Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-
-species = 'B.Nigra'
-treatment = 'HL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Bn_HL = parameters.estimate_Rd()
-Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-
-species = 'B.Nigra'
-treatment = 'LL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Bn_LL = parameters.estimate_Rd()
-Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-p_treatment = parameters.anova_test_treatments(Rd_values)
-p_species = parameters.anova_test_species(Rd_values)
-
-#Rd_values.to_excel(PATH + 'Parameters_Rd.xlsx', index = False)
-
-
-# Compare effect of leak correction on photosynthesis rate
-data = pd.read_excel ('Ave_Gas_Exchange_data.xlsx') 
-FORMAT = ['Species','Treatment','Response','Ci','A', 'Iinc']
-df_selected = data[FORMAT]
-A_CI = df_selected[df_selected['Response']=='ACI']
-A_I= df_selected[df_selected['Response']=='AI']
-
-data = pd.read_excel ('Ave_Gas_Exchange_data_corr.xlsx') 
-df_selected = data[FORMAT]
-A_CI_corr = df_selected[df_selected['Response']=='ACI']
-A_I_corr= df_selected[df_selected['Response']=='AI']
-
-species = 'BN'
-treatment = 'LL'
-O = 0.21
-A_CI_d = A_CI[A_CI['Species']==species]
-A_CI_d = A_CI_d[A_CI_d['Treatment']==treatment]
-A_bn = A_CI_d['A'].values
-Ci_bn = A_CI_d['Ci'].values
-
-
-A_CI_c = A_CI_corr[A_CI_corr['Species']==species]
-A_CI_c = A_CI_c[A_CI_c['Treatment']==treatment]
-
-A_c_bn = A_CI_d['A'].values
-Ci_c_bn = A_CI_d['Ci'].values
-
-species = 'Hi'
-treatment = 'LL'
-O = 0.21
-A_CI_d = A_CI[A_CI['Species']==species]
-A_CI_d = A_CI_d[A_CI_d['Treatment']==treatment]
-A_hi = A_CI_d['A'].values
-Ci_hi  = A_CI_d['Ci'].values
-
-A_CI_c = A_CI_corr[A_CI_corr['Species']==species]
-A_CI_c = A_CI_c[A_CI_c['Treatment']==treatment]
-
-A_c_hi  = A_CI_d['A'].values
-Ci_c_hi  = A_CI_d['Ci'].values
-
-A_c_hi=np.sort(A_c_hi);Ci_c_hi=np.sort(Ci_c_hi);
-Ci_c_bn=np.sort(Ci_c_bn);A_c_bn=np.sort(A_c_bn);
-
-A_hi=np.sort(A_hi);Ci_hi=np.sort(Ci_hi);
-Ci_bn=np.sort(Ci_bn);A_bn=np.sort(A_bn);
-
-plt.rcParams["figure.figsize"] = (10,5)
-fig, ax = plt.subplots(1,2,constrained_layout=True)
-ax[0].plot(Ci_c_bn,A_c_bn,'o--')
-ax[0].plot(Ci_bn,A_bn,'<')
-ax[1].plot(Ci_c_hi,A_c_hi,'o--',label='Corrected')
-ax[1].plot(Ci_hi,A_hi,'<',label='Raw')
-ax[0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=16)
-ax[0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
-ax[1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
-ax[1].legend(loc='lower right')  
-plt.show()
+#
+## Compare effect of leak correction on photosynthesis rate
+#data = pd.read_excel ('Ave_Gas_Exchange_data.xlsx') 
+#FORMAT = ['Species','Treatment','Response','Ci','A', 'Iinc']
+#df_selected = data[FORMAT]
+#A_CI = df_selected[df_selected['Response']=='ACI']
+#A_I= df_selected[df_selected['Response']=='AI']
+#
+#data = pd.read_excel ('Ave_Gas_Exchange_data_corr.xlsx') 
+#df_selected = data[FORMAT]
+#A_CI_corr = df_selected[df_selected['Response']=='ACI']
+#A_I_corr= df_selected[df_selected['Response']=='AI']
+#
+#species = 'BN'
+#treatment = 'LL'
+#O = 0.21
+#A_CI_d = A_CI[A_CI['Species']==species]
+#A_CI_d = A_CI_d[A_CI_d['Treatment']==treatment]
+#A_bn = A_CI_d['A'].values
+#Ci_bn = A_CI_d['Ci'].values
+#
+#
+#A_CI_c = A_CI_corr[A_CI_corr['Species']==species]
+#A_CI_c = A_CI_c[A_CI_c['Treatment']==treatment]
+#
+#A_c_bn = A_CI_d['A'].values
+#Ci_c_bn = A_CI_d['Ci'].values
+#
+#species = 'Hi'
+#treatment = 'LL'
+#O = 0.21
+#A_CI_d = A_CI[A_CI['Species']==species]
+#A_CI_d = A_CI_d[A_CI_d['Treatment']==treatment]
+#A_hi = A_CI_d['A'].values
+#Ci_hi  = A_CI_d['Ci'].values
+#
+#A_CI_c = A_CI_corr[A_CI_corr['Species']==species]
+#A_CI_c = A_CI_c[A_CI_c['Treatment']==treatment]
+#
+#A_c_hi  = A_CI_d['A'].values
+#Ci_c_hi  = A_CI_d['Ci'].values
+#
+#A_c_hi=np.sort(A_c_hi);Ci_c_hi=np.sort(Ci_c_hi);
+#Ci_c_bn=np.sort(Ci_c_bn);A_c_bn=np.sort(A_c_bn);
+#
+#A_hi=np.sort(A_hi);Ci_hi=np.sort(Ci_hi);
+#Ci_bn=np.sort(Ci_bn);A_bn=np.sort(A_bn);
+#
+#plt.rcParams["figure.figsize"] = (10,5)
+#fig, ax = plt.subplots(1,2,constrained_layout=True)
+#ax[0].plot(Ci_c_bn,A_c_bn,'o--')
+#ax[0].plot(Ci_bn,A_bn,'<')
+#ax[1].plot(Ci_c_hi,A_c_hi,'o--',label='Corrected')
+#ax[1].plot(Ci_hi,A_hi,'<',label='Raw')
+#ax[0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=16)
+#ax[0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
+#ax[1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)",fontsize=16)
+#ax[1].legend(loc='lower right')  
+#plt.show()
 
 # Estimate FvCB kinetics and Jmax
 Jmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Jmax','theta','Jmax_err','theta_err'])
@@ -293,7 +355,8 @@ def Phi2LL_tabel(Phi2LLs,species,treatment):
     
     
 cols = ['Plant','Treatment','Vcmax','Rd','Sco','Tp','Jmax','k2LL','theta',\
-        'Vcmax_err','Rd_err','Sco_err','Tp_err','Jmax_err','theta_err']
+        'Vcmax_err','Rd_err','Sco_err','Tp_err','Jmax_err','theta_err','bH','bH_err',\
+        'Std.err_bH','Std.err_bL']
 df_params=pd.DataFrame([],columns=cols)
 
 species = 'B.Nigra'
@@ -302,9 +365,21 @@ O = 0.02
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
+
+Rd_Bn_LL_common = parameters.estimate_Rd_common()
+Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
+Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Bn_LL_O2 = parameters.estimate_Rd()
+
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
-Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/4,axis=0)
+Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
 
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
@@ -331,6 +406,13 @@ df_params.loc[0,'theta']=Jmax[0][1]
 df_params.loc[0,'theta_err']=Jmax[2]
 df_params.loc[0,'Plant']=species
 df_params.loc[0,'Treatment']=treatment
+df_params.loc[0,'Sco']=sco[0]
+df_params.loc[0,'Sco_err']=sco[1]
+df_params.loc[0,'bH']=bH_bL['bH'].values
+df_params.loc[0,'Std.err_bH']=bH_bL['Std.err_bH'].values
+df_params.loc[0,'bL']=bH_bL['bH']
+df_params.loc[0,'Std.err_bL']=bH_bL['Std.err_bL'].values
+
 
 species = 'B.Nigra'
 treatment = 'HL'
@@ -340,7 +422,15 @@ parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
-Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/4,axis=0)
+Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+
+Rd_Bn_LL_common = parameters.estimate_Rd_common()
+Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
+Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
+
+Rd_Bn_LL_abs_adj = parameters.estimate_abs_adjusted_Rd()
+Rd_abs_adj = np.mean(Rd_Bn_LL_abs_adj['Rd'].values,axis=0)
+Rd_abs_adj_err = np.nanstd(Rd_Bn_LL_abs_adj['Rd'].values/2,axis=0)
 
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
@@ -352,6 +442,9 @@ Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Bn_HL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
 parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -369,6 +462,12 @@ df_params.loc[1,'theta']=Jmax[0][1]
 df_params.loc[1,'theta_err']=Jmax[2]
 df_params.loc[1,'Plant']=species
 df_params.loc[1,'Treatment']=treatment
+df_params.loc[1,'Sco']=sco[0]
+df_params.loc[1,'Sco_err']=sco[1]
+df_params.loc[1,'bH']=bH_bL['bH'].values
+df_params.loc[1,'Std.err_bH']=bH_bL['Std.err_bH'].values
+df_params.loc[1,'bL']=bH_bL['bH']
+df_params.loc[1,'Std.err_bL']=bH_bL['Std.err_bL'].values
 
 species = 'H.Incana'
 treatment = 'LL'
@@ -378,7 +477,16 @@ parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
-Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/4,axis=0)
+Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+
+Rd_Bn_LL_common = parameters.estimate_Rd_common()
+Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
+Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
+
+Rd_Bn_LL_abs_adj = parameters.estimate_abs_adjusted_Rd()
+Rd_abs_adj = np.mean(Rd_Bn_LL_abs_adj['Rd'].values,axis=0)
+Rd_abs_adj_err = np.nanstd(Rd_Bn_LL_abs_adj['Rd'].values/2,axis=0)
+
 
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
@@ -388,6 +496,11 @@ phi2LL = parameters.estimate_phi2LL()
 phi2LLs=Phi2LL_tabel(phi2LL_individual,species,treatment)
 Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Hi_LL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
+
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
+
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -405,6 +518,12 @@ df_params.loc[2,'theta']=Jmax[0][1]
 df_params.loc[2,'theta_err']=Jmax[2]
 df_params.loc[2,'Plant']=species
 df_params.loc[2,'Treatment']=treatment
+df_params.loc[2,'Sco']=sco[0]
+df_params.loc[2,'Sco_err']=sco[1]
+df_params.loc[2,'bH']=bH_bL['bH'].values
+df_params.loc[2,'Std.err_bH']=bH_bL['Std.err_bH'].values
+df_params.loc[2,'bL']=bH_bL['bH']
+df_params.loc[2,'Std.err_bL']=bH_bL['Std.err_bL'].values
 
 species = 'H.Incana'
 treatment = 'HL'
@@ -414,7 +533,11 @@ parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
-Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/4,axis=0)
+Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+
+Rd_Bn_LL_common = parameters.estimate_Rd_common()
+Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
+Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
 
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
@@ -426,7 +549,9 @@ Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Hi_HL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
 parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
-
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -444,6 +569,12 @@ df_params.loc[3,'theta']=Jmax[0][1]
 df_params.loc[3,'theta_err']=Jmax[2]
 df_params.loc[3,'Plant']=species
 df_params.loc[3,'Treatment']=treatment
+df_params.loc[3,'Sco']=sco[0]
+df_params.loc[3,'Sco_err']=sco[1]
+df_params.loc[3,'bH']=bH_bL['bH'].values
+df_params.loc[3,'Std.err_bH']=bH_bL['Std.err_bH'].values
+df_params.loc[3,'bL']=bH_bL['bH']
+df_params.loc[3,'Std.err_bL']=bH_bL['Std.err_bL'].values
 
 #Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
 boxplot = Jmax_values.boxplot(column=['Jmax'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1),fontsize=16)

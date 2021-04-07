@@ -63,7 +63,7 @@ def plot_response(treatment,data,measurement_days):
                 ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
                 ax[1][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
                 ax[1][1].set_xlabel("External $CO_2$ (µmol $mol^{-1}$)")
-                ax[1][1].set_ylim(bottom=0.7)
+#                ax[1][1].set_ylim(bottom=0.7)
                 ax[1][1].legend(loc='lower right', fontsize='x-large')     
                 
     else:
@@ -86,7 +86,7 @@ def plot_response(treatment,data,measurement_days):
             ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
             ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
             ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
-            ax[1][1].set_ylim(bottom=0.7)
+#            ax[1][1].set_ylim(bottom=0.7)
 #    ax.tick_params(labelsize='medium', width=5)
             ax[1][1].legend(loc='lower right', fontsize='x-large')     
     
@@ -230,6 +230,17 @@ data = A_I_Hi_LL[0]
 data=data.drop([69]) # duplicate data
 A_I_Hi_LL[0]=[]
 A_I_Hi_LL[0]=data
+
+data = A_CI_Hi_LL[0]
+data=data.drop([58,60,62,64,67]) # duplicate data
+A_CI_Hi_LL[0]=[]
+A_CI_Hi_LL[0]=data
+
+data = A_CI_Hi_LL[2]
+data=data.drop([38]) # duplicate data
+A_CI_Hi_LL[2]=[]
+A_CI_Hi_LL[2]=data
+
 #
 #plot_response('Light',A_I_Hi_LL,measurement_days)
 #plot_response('CO2',A_CI_Hi_LL,measurement_days)

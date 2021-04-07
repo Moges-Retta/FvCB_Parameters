@@ -9,10 +9,17 @@ Plant, cell and Environment, 2009,32(5) pp.448-64
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy import stats
-from scipy import optimize
+from scipy import optimize, constants,stats
 
 class Estimate_FvCB_parameters:
+    params = {'legend.fontsize': 'x-large',
+          'figure.figsize': (10, 10),
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
+    plt.rcParams.update(params)
+    rd_cut_light = 350
     def __init__(self,gas_exch_measurement):
         self.gas_exch_measurement=gas_exch_measurement
         
@@ -41,7 +48,7 @@ class Estimate_FvCB_parameters:
                 if replicate == 1:
                     ax[0][0].plot(X, Y, 'ko')           
                     ax[0][0].plot(X, ypredict, color='black', linewidth=3) 
-                    ax[0][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
+                    ax[0][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=16)
                     ax[0][0].text(min(X)+1,max(Y)-3,text)
                     
                 elif replicate==2:
@@ -52,14 +59,14 @@ class Estimate_FvCB_parameters:
                 elif replicate==3:
                     ax[1][0].plot(X, Y, 'ko')         
                     ax[1][0].plot(X, ypredict, color='black', linewidth=3)
-                    ax[1][0].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)') 
-                    ax[1][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
+                    ax[1][0].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)',fontsize=16) 
+                    ax[1][0].set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=16)
                     ax[1][0].text(min(X)+1,max(Y)-3,text)
                     
                 else:
                     ax[1][1].plot(X, Y, 'ko')           
                     ax[1][1].plot(X, ypredict, color='black', linewidth=3) 
-                    ax[1][1].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)')
+                    ax[1][1].set_xlabel('\u03A6$_{PSII}$ * $I_{inc}$/4 (µmol $m^{-2}$ $s^{-1}$)',fontsize=16)
                     ax[1][1].text(min(X)+1,max(Y)-3,text)
                 count+=1           
             plt.show()
@@ -113,7 +120,7 @@ class Estimate_FvCB_parameters:
         """
         
         AI = self.gas_exch_measurement.get_AI_data()
-        AI=AI[AI['Irradiance']<350]
+        AI=AI[AI['Irradiance']<self.rd_cut_light]
         replicates = AI['Replicate'].values
         replicates=np.unique(replicates)
         df = pd.DataFrame([],columns=['Replicate','Rd','Std.err','R2','Slope']) 
@@ -140,6 +147,91 @@ class Estimate_FvCB_parameters:
         self.plot_Rd(df,df2)
         return df    
    
+
+# Estimate Rd and calibration factor s
+    def estimate_abs_adjusted_Rd(self): 
+        
+        """
+        Estimate Rd as intercept of linear regression between 
+        A and PhiPSII*Iabs/4 where Iabs = Iinc*abs, measured absorbance
+        """
+        
+        AI = self.gas_exch_measurement.get_AI_data()
+        AI=AI[AI['Irradiance']<self.rd_cut_light]
+        replicates = AI['Replicate'].values
+        replicates=np.unique(replicates)
+        df = pd.DataFrame([],columns=['Replicate','Rd','Std.err','R2','Slope']) 
+        df2 = pd.DataFrame([],columns=['Replicate','X','Y'] ) 
+        absorbance = 0.90
+        count = 0
+        for replicate in replicates:
+            A_I_r= AI[AI['Replicate']==replicate]
+            I = A_I_r['Irradiance'].values            
+            PhiPS2 = A_I_r['PhiPS2'].values
+            A = A_I_r['Net CO2 assimilation rate'].values
+            X = PhiPS2*I*absorbance/4
+            result = stats.linregress(X, A) #slope, intercept, r, p, se 
+            df.loc[count,'Rd'] = result.intercept
+            df.loc[count,'R2'] = result.rvalue**2
+            df.loc[count,'Replicate'] = replicate
+            df.loc[count,'Slope'] = result.slope
+            df.loc[count,'Std.err'] = result.stderr            
+            df2.loc[count,'X'] = X
+            df2.loc[count,'Y'] = A
+            df2.loc[count,'Replicate'] = replicate
+            count+=1
+        self.plot_Rd(df,df2)
+        return df    
+   
+
+    def estimate_Rd_common(self): 
+        
+        """
+        Estimate Rd as intercept of linear regression between 
+        A and PhiPSII*Iinc/4 with data for 21 % O2 and 2 % O2 poopled together
+        """
+        self.gas_exch_measurement.set_O2(0.02)
+        AI = self.gas_exch_measurement.get_AI_data()
+        self.gas_exch_measurement.set_O2(0.21)
+        AI_21O2 = self.gas_exch_measurement.get_AI_data()        
+        AI=AI[AI['Irradiance']<self.rd_cut_light]
+        AI_21O2=AI_21O2[AI_21O2['Irradiance']<self.rd_cut_light]
+        
+        replicates = AI['Replicate'].values
+        replicates=np.unique(replicates)
+        df = pd.DataFrame([],columns=['Replicate','Rd','Std.err','R2','Slope']) 
+        df2 = pd.DataFrame([],columns=['Replicate','X','Y'] ) 
+        count = 0
+        for replicate in replicates:
+            A_I_r= AI[AI['Replicate']==replicate]
+            I = A_I_r['Irradiance'].values            
+            PhiPS2 = A_I_r['PhiPS2'].values
+
+            A_I_r_O2= AI_21O2[AI_21O2['Replicate']==replicate]
+            I_O2 = A_I_r_O2['Irradiance'].values            
+            PhiPS2_O2 = A_I_r_O2['PhiPS2'].values
+            
+            A = A_I_r['Net CO2 assimilation rate'].values
+            X = PhiPS2*I/4
+            
+            A_O2 = A_I_r_O2['Net CO2 assimilation rate'].values
+            X_O2 = PhiPS2_O2*I_O2/4
+            
+            x_data = np.concatenate((X,X_O2),axis=None)
+            y_data = np.concatenate((A,A_O2),axis=None)
+            result = stats.linregress(x_data, y_data) #slope, intercept, r, p, se    
+            
+            df.loc[count,'Rd'] = result.intercept
+            df.loc[count,'R2'] = result.rvalue**2
+            df.loc[count,'Replicate'] = replicate
+            df.loc[count,'Slope'] = result.slope
+            df.loc[count,'Std.err'] = result.stderr            
+            df2.loc[count,'X'] = x_data
+            df2.loc[count,'Y'] = y_data
+            df2.loc[count,'Replicate'] = replicate
+            count+=1
+        self.plot_Rd(df,df2)
+        return df  
          
 # Estimate Jmax
     def model_individual_Jmax(self,params,s,PHI2LL,Iinc,phiPS2): 
@@ -445,3 +537,123 @@ class Estimate_FvCB_parameters:
         ax.set_ylabel('k${_2}$ (mol $e^{-}$ mol photon$^{-1}$)',fontsize=24)
         self.show_significant(p_values,k2_plant1_ave_d,k2_plant2_ave_d,k2_std1_d,k2_std2_d,ax)          
         return p_values
+    
+    def get_Sco_data(self,Rd_values):  
+        
+        self.gas_exch_measurement.set_O2(0.21)
+        ACIH = self.gas_exch_measurement.get_ACI_data()
+        ACIH = ACIH[ACIH['CO2R'].between(50,210)]
+
+        self.gas_exch_measurement.set_O2(0.02)
+        ACIL = self.gas_exch_measurement.get_ACI_data()
+        ACIL = ACIL[ACIL['CO2R'].between(50,210)]
+        cols =  ['Replicate','CiH','AH','CiL','AL','Rd']        
+        df = pd.DataFrame([],columns=cols)
+        replicates = ACIH['Replicate'].unique()
+        count = 0
+        for replicate in replicates:  
+            df2 = pd.DataFrame([],columns=cols)
+            ACIH_r = ACIH[ACIH['Replicate']==replicate]
+            AH = ACIH_r['Net CO2 assimilation rate'].values
+            CiH = ACIH_r['Intercellular CO2 concentration'].values 
+            ACIL_r = ACIL[ACIL['Replicate']==replicate]
+            AL = ACIL_r['Net CO2 assimilation rate'].values
+            CiL = ACIL_r['Intercellular CO2 concentration'].values  
+            Rd_value = Rd_values[count]
+            df2.loc[:,'AH'] = AH
+            df2.loc[:,'CiH'] = CiH
+            df2.loc[:,'Replicate'] = replicate
+            df2.loc[:,'Rd'] = Rd_value            
+            df2.loc[:,'AL'] = AL
+            df2.loc[:,'CiL'] = CiL    
+            df = df.append(df2,'sort=False')
+            count+=1        
+        return df
+    
+    def estimate_bH_bL(self,Rd_values):
+        data = self.get_Sco_data(Rd_values)
+        CiH = data['CiH'].values*constants.atm/10**5
+        AH = data['AH'].values   
+        CiL = data['CiL'].values*constants.atm/10**5
+        AL = data['AL'].values   
+        df = pd.DataFrame([],columns=['bH','Std.err_bH','R2_bH','intercept_bH',\
+                          'bL','Std.err_bL','R2_bL','intercept_bL'])
+        result = stats.linregress(CiH, AH) #slope, intercept, r, p, se 
+        bH = result.slope; intercept_bH = result.intercept; 
+        R2_bH = result.rvalue**2
+        df.loc[0,'R2_bH'] = R2_bH
+        df.loc[0,'bH'] = bH
+        df.loc[0,'intercept_bH'] = intercept_bH
+        df.loc[0,'Std.err_bH'] = result.stderr            
+        
+        result = stats.linregress(CiL, AL) #slope, intercept, r, p, se
+        bL = result.slope; intercept_bL = result.intercept; 
+        R2_bL = result.rvalue**2
+        
+        df.loc[0,'R2_bL'] = R2_bL
+        df.loc[0,'bL'] = bL
+        df.loc[0,'intercept_bL'] = intercept_bL
+        df.loc[0,'Std.err_bL'] = result.stderr            
+        
+        
+#        fig, (ax1, ax2) = plt.subplots(ncols=2)        
+#        ax1.plot(CiH,AH,'ko')
+#        ax1.plot(CiH,bH*CiH+intercept_bH)
+#        ax2.plot(CiL,AL,'ko')
+#        ax2.plot(CiL,bL*CiL+intercept_bL)        
+#        
+#        text = 'y = ' + str(np.round(bH,3)) + '*x + '+str(np.round(intercept_bH,3))\
+#              + ' \n R2 = '+str(np.round(R2_bH,3))
+#
+#        text2 = 'y = ' + str(np.round(bL,3)) + '*x + '+str(np.round(intercept_bL,3))\
+#              + ' \n R2 = '+str(np.round(R2_bL,3))
+#              
+#        ax1.text(min(CiH)+1,max(AH)-3,text)
+#        ax2.text(min(CiL)+1,max(AL)-3,text2)
+#        plt.show()   
+        return df
+        
+        
+    def model_Sco(self,Sco,Rd_values):
+        df = self.estimate_bH_bL(Rd_values)
+        data = self.get_Sco_data(Rd_values)
+        CiH = data['CiH'].values
+        AH = data['AH'].values   
+        CiL = data['CiL'].values
+        AL = data['AL'].values 
+        
+        AH = data['AH'].values
+        Rd = data['Rd'].values      
+        AL = data['AL'].values                
+        bH = df['bH'].values
+        bL = df['bL'].values
+        CiH = data['CiH'].values*constants.atm/10**5
+        CiL = data['CiL'].values*constants.atm/10**5   
+        OH = 210 #mbar
+        OL = 20
+        AH_mod = (AL + Rd)*bH/bL - (0.5*(OH-OL)/Sco + CiL-CiH)*bH + Rd
+        diff = (AH-AH_mod).astype(np.float64)
+        return diff
+        
+    def estimate_Sco(self,Rd_values):
+        bnds=((0.1),(10)) #lb,ub
+        x0 = np.array([3.2])   
+        Rd = Rd_values.astype(np.float64)
+        result = optimize.least_squares(self.model_Sco,x0,args=[Rd],method='trf',bounds=bnds)
+        res = self.model_Sco(result.x,Rd)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-1;
+        G=np.linalg.inv(H);
+        var_1=2*S*G[0,0]/degfr;
+        var_1 = np.sqrt(var_1)
+        Sco = pd.DataFrame([], columns = ['Sco','Std.err'])
+        if result.success:
+            Sco.loc[0,'Sco']=result.x
+            Sco.loc[0,'Std.err']=var_1
+            return Sco          
+        else:
+            raise ValueError(result.message)
+            return []        
+            

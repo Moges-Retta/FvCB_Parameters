@@ -16,7 +16,7 @@ PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 class Gas_exchange_measurement:
     data = pd.read_excel ('Gas_Exchange_data.xlsx') 
 #    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
-    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
+    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2R']
     df_selected = data[FORMAT]
     A_CI = df_selected[df_selected['Measurement type']=='A-CI curve']
     A_I= df_selected[df_selected['Measurement type']=='A-I curve']
@@ -28,7 +28,19 @@ class Gas_exchange_measurement:
             self.species=species        
             self.treatment=treatment
             
-                   
+     
+    def set_O2(self,O2):
+        self.O2=O2
+
+
+    def set_species(self,species):
+        self.species=species
+    
+    
+    def set_treatment(self,treatment):
+        self.treatment=treatment        
+         
+        
     def get_O2(self):
         return self.O2
       
@@ -72,7 +84,8 @@ class Gas_exchange_measurement:
 
 
     def get_ACI_data(self):
-        A_CI_d  = self.A_CI[self.A_CI['Oxygen level']==self.get_O2()]
+        A_CI = self.get_A_Ci()
+        A_CI_d  = A_CI[A_CI['Oxygen level']==self.get_O2()]
         A_CI_d =  A_CI_d[A_CI_d['Species']==self.get_species()]
         A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
         return A_CI_d
