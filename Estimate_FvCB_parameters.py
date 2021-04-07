@@ -440,7 +440,7 @@ class Estimate_FvCB_parameters:
         
     def estimate_Jmax(self,inputs):
         bnds=((0,0.5),(1000,1)) #lb,ub
-        x0 = np.array([150,0.7])    
+        x0 = np.array([150,0.5])    
         s = inputs.get('s')
         PHI2LL=inputs.get('PHI2LL')
         result = optimize.least_squares(self.model_Jmax,x0,args=[s,PHI2LL],method='trf',bounds=bnds)
@@ -505,7 +505,7 @@ class Estimate_FvCB_parameters:
                 k2_values = k1
             else:
                 k2_values = k2
-            axis.plot(par_values[i]-60, k2_values, color='red',marker=m[i])
+            axis.plot(par_values[i]-60, k2_values, color='red',marker=m[i],markersize=8)
             axis.legend(loc='top right', fontsize='x-large')     
   
                   
@@ -531,8 +531,8 @@ class Estimate_FvCB_parameters:
             p_values.append(p) 
         fig, ax = plt.subplots()
         par_values = [100,120,150,180,200,250,300,400,550,800,1100,1500,1800,2200]
-        ax.errorbar(par_values,k2_plant1_ave_d,k2_std1_d,fmt='ko',mfc='none',label=label1)
-        ax.errorbar(par_values,k2_plant2_ave_d,k2_std2_d,fmt='k<',mfc='none',label=label2)
+        ax.errorbar(par_values,k2_plant1_ave_d,k2_std1_d,fmt='ko',mfc='none',label=label1,markersize=10)
+        ax.errorbar(par_values,k2_plant2_ave_d,k2_std2_d,fmt='k<',mfc='none',label=label2,markersize=10)
         ax.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=24)
         ax.set_ylabel('k${_2}$ (mol $e^{-}$ mol photon$^{-1}$)',fontsize=24)
         self.show_significant(p_values,k2_plant1_ave_d,k2_plant2_ave_d,k2_std1_d,k2_std2_d,ax)          
@@ -656,4 +656,105 @@ class Estimate_FvCB_parameters:
         else:
             raise ValueError(result.message)
             return []        
-            
+
+    def get_vcmax_data(self,RD,JMAX,THETA,K2LL):
+        self.gas_exch_measurement.set_O2(0.21)
+        ACIH = self.gas_exch_measurement.get_ACI_data()
+        replicates = ACIH['Replicate'].unique()
+        cols = ['Rd','Theta','Jmax','k2LL','Ci','Iinc','A']  # RD THETA JMAX K2LL CI IINC A;
+        df_vcmax = pd.DataFrame([],columns = cols)
+        count = 0 
+        for replicate in replicates:
+            df = pd.DataFrame([],columns = cols)
+            ACIH_r = ACIH[ACIH['Replicate']==replicate]
+            CI = ACIH_r['Intercellular CO2 concentration'].values
+            IINC = ACIH_r['Irradiance'].values
+            A = ACIH_r['Net CO2 assimilation rate'].values            
+            Rd = RD[count]
+            k2LL = K2LL[count]
+            df.loc[:,'A'] = A                        
+            df.loc[:,'Rd'] = Rd
+            df.loc[:,'Theta'] = THETA
+            df.loc[:,'Jmax'] = JMAX
+            df.loc[:,'k2LL'] = k2LL
+            df.loc[:,'Ci'] = CI
+            df.loc[:,'Iinc'] = IINC
+            df_vcmax = df_vcmax.append(df)
+            count+=1
+        return df_vcmax
+        
+    def model_Vcmax(self,xo,RDs,JMAXs,THETAs,K2LLs):
+        VCMAX,TP,R = xo
+        df_vcmax = self.get_vcmax_data(RDs,JMAXs,THETAs,K2LLs)
+        A = df_vcmax['A'].values
+        RD = df_vcmax['Rd'].values
+        JMAX = df_vcmax['Jmax'].values
+        THETA = df_vcmax['Theta'].values
+        K2LL = df_vcmax['k2LL'].values
+        CI = df_vcmax['Ci'].values
+        IINC = df_vcmax['Iinc'].values
+        
+        O = 210 #mbar
+        SCO = 3.259;
+        GAMMAX = 0.5*O/SCO;
+        GM0 = 0;
+#        R = 1;
+        
+        #Rubisco-limited part;
+        KMC = 267
+        KMO = 164
+        KMCMO = KMC*(1+O/KMO);
+        X1R = VCMAX;
+        X2R = KMCMO;
+        PR = GM0*(X2R+GAMMAX)+(X1R-RD)*R;
+        QR = (CI-GAMMAX)*X1R-(CI+X2R)*RD;
+        AAR = (1.+R)*X2R + GAMMAX + R*CI;
+        BBR = -((X2R+GAMMAX)*(X1R-RD)+PR*(CI+X2R)+R*QR);
+        CCR = PR*QR;
+        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2.*AAR);
+        #Electron transport limited part;
+        BB = K2LL*IINC + JMAX;
+        J = (BB-(BB**2-4*THETA*JMAX*K2LL*IINC)**0.5)/(2*THETA);
+        X1J = J/4;
+        X2J = 2*GAMMAX;
+        PJ = GM0*(X2J+GAMMAX)+(X1J-RD)*R;
+        QJ = (CI-GAMMAX)*X1J-(CI+X2J)*RD;
+        AAJ = (1.+R)*X2J + GAMMAX + R*CI;
+        BBJ = -((X2J+GAMMAX)*(X1J-RD)+PJ*(CI+X2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        #TPU limited part;
+        AP = 3*TP-RD;
+        A1 = np.minimum(AR,AJ)
+        A2 = np.minimum(A1,AP)  
+#        print(K2LL)
+        return A - A2
+    
+    
+    def estimate_Vcmax(self,inputs):
+        RD = inputs.get('Rd')*-1
+        JMAX = inputs.get('Jmax')
+        THETA = inputs.get('Theta')
+        K2LL = inputs.get('k2LL')
+        bnds=((0,0,0),(700,700,10)) 
+        x0 = np.array([250,120,5])        #Vcmax, TP ,R     
+        result = optimize.least_squares(self.model_Vcmax,x0,args=[RD,JMAX,THETA,K2LL],method='trf',bounds=bnds)
+        res = self.model_Vcmax(result.x,RD,JMAX,THETA,K2LL)
+        print(res)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-3;
+        G=np.linalg.inv(H);
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_3=2*S*G[2,2]/degfr;
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        var_3 = np.sqrt(var_3)
+   
+        if result.success:
+            return [result.x,var_1,var_2,var_3]
+        else:
+            raise ValueError(result.message)
+            return []        

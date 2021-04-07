@@ -380,7 +380,7 @@ Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
-
+        
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
@@ -397,6 +397,10 @@ Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs=Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values=Jmax_values.append(Jmaxs)
 
+inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax = parameters.estimate_Vcmax(inputs)
+    
 df_params.loc[0,'Rd']=Rd
 df_params.loc[0,'Rd_err']=Rd_err
 df_params.loc[0,'k2LL']=s*phi2LL[0][0]
