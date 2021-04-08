@@ -117,7 +117,9 @@ class Gas_exchange_measurement:
         I_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
         gs_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
         PhiPSII_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
-
+        cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
+                'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
+        df_ave = pd.DataFrame([],columns = cols)
         for replicate in replicates:
             A_CI_r= A_CI_d[A_CI_d['Replicate']==replicate]
             Ci = A_CI_r['Intercellular CO2 concentration'].values
@@ -131,9 +133,18 @@ class Gas_exchange_measurement:
             I_ave=np.append(I_ave, np.array([I]).transpose(),axis=1)
             gs_ave=np.append(gs_ave, np.array([gs]).transpose(),axis=1)
             phiPS2_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
-
-        return [np.nanmean(I_ave,axis=1),np.nanmean(Ci_ave,axis=1),np.nanmean(A_ave,axis=1),np.nanmean(phiPS2_ave,axis=1),np.nanmean(gs_ave,axis=1),np.nanstd(A_ave,axis=1),np.nanstd(gs_ave,axis=1),np.nanstd(phiPS2_ave)]
-    
+        
+        df_ave.loc[:,'Irradiance'] = np.nanmean(I_ave,axis=1)
+        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(Ci_ave,axis=1)
+        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(A_ave,axis=1)
+        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(gs_ave,axis=1)
+        df_ave.loc[:,'PhiPS2'] = np.nanmean(phiPS2_ave,axis=1)
+        df_ave.loc[:,'Photo_err'] = np.nanstd(A_ave,axis=1)
+        df_ave.loc[:,'gs_err'] = np.nanstd(gs_ave,axis=1)
+        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(phiPS2_ave,axis=1)
+        df_ave = df_ave.sort_values(by=['Intercellular CO2 concentration'])
+#        return [np.nanmean(I_ave,axis=1),np.nanmean(Ci_ave,axis=1),np.nanmean(A_ave,axis=1),np.nanmean(phiPS2_ave,axis=1),np.nanmean(gs_ave,axis=1),np.nanstd(A_ave,axis=1),np.nanstd(gs_ave,axis=1),np.nanstd(phiPS2_ave)]
+        return df_ave
     
     def average_A_I(self):
         A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
@@ -147,7 +158,10 @@ class Gas_exchange_measurement:
         A_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
         gs_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
         PhiPSII_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-
+        cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
+                'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
+        df_ave = pd.DataFrame([],columns = cols)
+        
         for replicate in replicates:
             A_I_r= A_I_d[A_I_d['Replicate']==replicate]
             I = A_I_r['Irradiance'].values
@@ -159,10 +173,17 @@ class Gas_exchange_measurement:
             A_ave=np.append(A_ave, np.array([A]).transpose(),axis=1)
             Ci_ave=np.append(Ci_ave, np.array([Ci]).transpose(),axis=1)
             gs_ave=np.append(gs_ave, np.array([gs]).transpose(),axis=1)
-            phiPS2_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
-            
-        return [np.nanmean(I_ave,axis=1),np.nanmean(Ci_ave,axis=1),np.nanmean(A_ave,axis=1),np.nanmean(gs_ave,axis=1),np.nanmean(phiPS2_ave,axis=1),np.nanstd(A_ave,axis=1),np.nanstd(gs_ave,axis=1),np.nanstd(phiPS2_ave)]
-     
+            PhiPSII_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
+        df_ave.loc[:,'Irradiance'] = np.nanmean(I_ave,axis=1)
+        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(Ci_ave,axis=1)
+        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(A_ave,axis=1)
+        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(gs_ave,axis=1)
+        df_ave.loc[:,'PhiPS2'] = np.nanmean(PhiPSII_ave,axis=1)
+        df_ave.loc[:,'Photo_err'] = np.nanstd(A_ave,axis=1)
+        df_ave.loc[:,'gs_err'] = np.nanstd(gs_ave,axis=1)
+        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(PhiPSII_ave,axis=1)        
+        df_ave = df_ave.sort_values(by=['Irradiance'])            
+        return df_ave
         
     def plot_ave_A_CI(self,x1,y1,yerr):
         plt.errorbar(x1,y1,yerr,fmt='o')

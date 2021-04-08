@@ -25,7 +25,17 @@ O = 0.21
 for plant in species:
         for treatment in treatments:
             gas_exch_measurement = Gas_exchange_measurement(O,plant,treatment)
-            [I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std] = gas_exch_measurement.average_A_CI()
+            df_ave = gas_exch_measurement.average_A_CI()
+            
+            I_ave_ci = df_ave['Irradiance'].values
+            Ci_ave_ci = df_ave['Intercellular CO2 concentration'].values
+            A_ave_ci = df_ave['Net CO2 assimilation rate'].values
+            gs_ave_ci = df_ave['Stomatal conductance for CO2'].values
+            phiPS2 = df_ave['PhiPS2'].values
+            A_std = df_ave['Photo_err'].values
+            gs_std = df_ave['gs_err'].values
+            phiPS2_std = df_ave['PhiPS2_err'].values
+            
             df = pd.DataFrame([],columns=columns )            
             df['Ci']=Ci_ave_ci; df['A']=A_ave_ci; df['Iinc']=I_ave_ci; 
             df['Std.dev A']=A_std; df['gs']=gs_ave_ci;df['PhiPS2']=phiPS2;df['Std.dev PhiPS2']=phiPS2_std;
@@ -40,17 +50,32 @@ for plant in species:
             
 ##ave_gas_Exchange_data.to_excel(PATH + 'Ave_Gas_Exchange_data_corr.xlsx', index = False)
 
+def get_average_values(gas_exch_measurement,curve):
+    if curve == 'ACI':
+        df_ave = gas_exch_measurement.average_A_CI()    
+    else :
+        df_ave = gas_exch_measurement.average_A_I()    
+        
+    I_ave_ci = df_ave['Irradiance'].values
+    Ci_ave_ci = df_ave['Intercellular CO2 concentration'].values
+    A_ave_ci = df_ave['Net CO2 assimilation rate'].values
+    gs_ave_ci = df_ave['Stomatal conductance for CO2'].values
+    phiPS2 = df_ave['PhiPS2'].values
+    A_std = df_ave['Photo_err'].values
+    gs_std = df_ave['gs_err'].values
+    phiPS2_std = df_ave['PhiPS2_err'].values
+    return [I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]
+
 species = 'B.Nigra'
 treatment = 'LL'
 O = 0.21
 
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-
-[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std] = gas_exch_measurement.average_A_CI()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'ACI')
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 
-[I_ave_i,Ci_ave_i,A_ave_i,gs_ave_i,phiPS2,A_std,gs_std,phiPS2_std] = gas_exch_measurement.average_A_I()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'AI')
 #gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
 
@@ -58,11 +83,11 @@ species = 'B.Nigra'
 treatment = 'HL'
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_CI()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'ACI')
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 
-[I_ave_i,Ci_ave_i,A_ave_i,gs_ave_i,phiPS2,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_I()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'AI')
 #gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
 
@@ -70,12 +95,11 @@ species = 'H.Incana'
 treatment = 'HL'
 O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-
-[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_CI()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'ACI')
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 
-[I_ave_i,Ci_ave_i,A_ave_i,gs_ave_i,phiPS2,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_I()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'AI')
 #gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
 
@@ -84,11 +108,11 @@ treatment = 'LL'
 O = 0.21
 
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = gas_exch_measurement.average_A_CI()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'ACI')
 #gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
 #gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 
-[I_ave_i,Ci_ave_i,A_ave_i,gs_ave_i,phiPS2,A_std,gs_std,phiPS2_std] = gas_exch_measurement.average_A_I()
+[I_ave_ci,Ci_ave_ci,A_ave_ci,phiPS2,gs_ave_ci,A_std,gs_std,phiPS2_std]  = get_average_values(gas_exch_measurement,'AI')
 #gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
 
@@ -356,7 +380,7 @@ def Phi2LL_tabel(Phi2LLs,species,treatment):
     
 cols = ['Plant','Treatment','Vcmax','Rd','Sco','Tp','Jmax','k2LL','theta',\
         'Vcmax_err','Rd_err','Sco_err','Tp_err','Jmax_err','theta_err','bH','bH_err',\
-        'Std.err_bH','Std.err_bL']
+        'Std.err_bH','Std.err_bL','Sigma_gm','Sigma_gm_err']
 df_params=pd.DataFrame([],columns=cols)
 
 species = 'B.Nigra'
@@ -388,6 +412,7 @@ phi2LL_individual = parameters.estimate_individual_phi2LL()
 phi2LL = parameters.estimate_phi2LL()
 phi2LLs=Phi2LL_tabel(phi2LL_individual,species,treatment)
 Phi2LL_values=Phi2LL_values.append(phi2LLs)
+
 k2_Bn_LL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
@@ -397,10 +422,16 @@ Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs=Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values=Jmax_values.append(Jmaxs)
 
-inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
           'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
 vcmax = parameters.estimate_Vcmax(inputs)
-    
+
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
+          'Theta':Jmax_individual['theta'].values,\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
+ 
 df_params.loc[0,'Rd']=Rd
 df_params.loc[0,'Rd_err']=Rd_err
 df_params.loc[0,'k2LL']=s*phi2LL[0][0]
@@ -410,13 +441,18 @@ df_params.loc[0,'theta']=Jmax[0][1]
 df_params.loc[0,'theta_err']=Jmax[2]
 df_params.loc[0,'Plant']=species
 df_params.loc[0,'Treatment']=treatment
-df_params.loc[0,'Sco']=sco[0]
-df_params.loc[0,'Sco_err']=sco[1]
+df_params.loc[0,'Sco']=sco['Sco'].values
+df_params.loc[0,'Sco_err']=sco['Std.err'].values
 df_params.loc[0,'bH']=bH_bL['bH'].values
 df_params.loc[0,'Std.err_bH']=bH_bL['Std.err_bH'].values
-df_params.loc[0,'bL']=bH_bL['bH']
+df_params.loc[0,'bL']=bH_bL['bH'].values
 df_params.loc[0,'Std.err_bL']=bH_bL['Std.err_bL'].values
-
+df_params.loc[0,'Vcmax']=vcmax[0][0]
+df_params.loc[0,'Vcmax_err']=vcmax[1]
+df_params.loc[0,'Tp']=vcmax[0][1]
+df_params.loc[0,'Tp_err']=vcmax[2]
+df_params.loc[0,'Sigma_gm']=vcmax[0][2]
+df_params.loc[0,'Sigma_gm_err']=vcmax[3]
 
 species = 'B.Nigra'
 treatment = 'HL'
@@ -427,6 +463,7 @@ Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+
 
 Rd_Bn_LL_common = parameters.estimate_Rd_common()
 Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
@@ -445,10 +482,7 @@ phi2LLs=Phi2LL_tabel(phi2LL_individual,species,treatment)
 Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Bn_HL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
-parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
-bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
-sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
+Rd_Bn_LL_O2 = parameters.estimate_Rd()
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -456,6 +490,20 @@ inputs = {'s':s,'PHI2LL':phi2LL[0][0]}
 Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs=Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values=Jmax_values.append(Jmaxs)
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax = parameters.estimate_Vcmax(inputs)
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
+          'Theta':Jmax_individual['theta'].values,\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
+
+#parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 df_params.loc[1,'Rd']=Rd
 df_params.loc[1,'Rd_err']=Rd_err
@@ -472,6 +520,12 @@ df_params.loc[1,'bH']=bH_bL['bH'].values
 df_params.loc[1,'Std.err_bH']=bH_bL['Std.err_bH'].values
 df_params.loc[1,'bL']=bH_bL['bH']
 df_params.loc[1,'Std.err_bL']=bH_bL['Std.err_bL'].values
+df_params.loc[1,'Vcmax']=vcmax[0][0]
+df_params.loc[1,'Vcmax_err']=vcmax[1][0]
+df_params.loc[1,'Tp']=vcmax[0][1]
+df_params.loc[1,'Tp_err']=vcmax[1][1]
+df_params.loc[1,'Sigma_gm']=vcmax[0][2]
+df_params.loc[1,'Sigma_gm_err']=vcmax[1][2]
 
 species = 'H.Incana'
 treatment = 'LL'
@@ -501,10 +555,6 @@ phi2LLs=Phi2LL_tabel(phi2LL_individual,species,treatment)
 Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Hi_LL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
-sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
-
-bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -512,6 +562,19 @@ inputs = {'s':s,'PHI2LL':phi2LL[0][0]}
 Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs=Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values=Jmax_values.append(Jmaxs)
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax = parameters.estimate_Vcmax(inputs)
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
+          'Theta':Jmax_individual['theta'].values,\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
+
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 
 df_params.loc[2,'Rd']=Rd
 df_params.loc[2,'Rd_err']=Rd_err
@@ -528,6 +591,12 @@ df_params.loc[2,'bH']=bH_bL['bH'].values
 df_params.loc[2,'Std.err_bH']=bH_bL['Std.err_bH'].values
 df_params.loc[2,'bL']=bH_bL['bH']
 df_params.loc[2,'Std.err_bL']=bH_bL['Std.err_bL'].values
+df_params.loc[2,'Vcmax']=vcmax[0][0]
+df_params.loc[2,'Vcmax_err']=vcmax[1][0]
+df_params.loc[2,'Tp']=vcmax[0][1]
+df_params.loc[2,'Tp_err']=vcmax[1][1]
+df_params.loc[2,'Sigma_gm']=vcmax[0][2]
+df_params.loc[2,'Sigma_gm_err']=vcmax[1][2]
 
 species = 'H.Incana'
 treatment = 'HL'
@@ -552,10 +621,6 @@ phi2LLs=Phi2LL_tabel(phi2LL_individual,species,treatment)
 Phi2LL_values=Phi2LL_values.append(phi2LLs)
 k2_Hi_HL = parameters.calculate_k2(Rd_Bn_LL['Slope'])
 
-parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
-bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
-sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'s':Rd_Bn_LL['Slope'].values,'phi2LL':phi2LL_individual['Phi2LL'].values}
 Jmax_individual  = parameters.estimate_individual_Jmax(inputs)
@@ -563,6 +628,20 @@ inputs = {'s':s,'PHI2LL':phi2LL[0][0]}
 Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs = Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values = Jmax_values.append(Jmaxs)
+
+#inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
+#          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+#vcmax = parameters.estimate_Vcmax(inputs)
+
+inputs = {'Rd':Rd_Bn_LL_O2['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
+          'Theta':Jmax_individual['theta'].values,\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values}
+vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
+
+#parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 df_params.loc[3,'Rd']=Rd
 df_params.loc[3,'Rd_err']=Rd_err
@@ -579,6 +658,12 @@ df_params.loc[3,'bH']=bH_bL['bH'].values
 df_params.loc[3,'Std.err_bH']=bH_bL['Std.err_bH'].values
 df_params.loc[3,'bL']=bH_bL['bH']
 df_params.loc[3,'Std.err_bL']=bH_bL['Std.err_bL'].values
+df_params.loc[3,'Vcmax']=vcmax[0][0]
+df_params.loc[3,'Vcmax_err']=vcmax[1][0]
+df_params.loc[3,'Tp']=vcmax[0][1]
+df_params.loc[3,'Tp_err']=vcmax[1][1]
+df_params.loc[3,'Sigma_gm']=vcmax[0][2]
+df_params.loc[3,'Sigma_gm_err']=vcmax[1][2]
 
 #Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
 boxplot = Jmax_values.boxplot(column=['Jmax'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1),fontsize=16)
