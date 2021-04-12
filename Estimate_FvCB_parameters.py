@@ -444,8 +444,9 @@ class Estimate_FvCB_parameters:
         J = s*Iave*phiPS2
         SQ = ((k2LL*Iave+Jmax)**2-4*theta*k2LL*Jmax*Iave)**0.5
         J_mod = (k2LL*Iave+Jmax-SQ)/(2*theta) 
+        
         fig, ax = plt.subplots()
-        ax.errorbar(Iave,J,std_phiPS2*J,fmt='ko',label='CF') 
+        ax.errorbar(Iave,J,std_phiPS2*J/2,fmt='ko',label='CF') 
         ax.plot(Iave,J_mod,'k-',linewidth=2.0,label='Model')  
         ax.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)')
         ax.set_ylabel('ATP production (µmol $m^{-2}$ $s^{-1}$)')  
@@ -723,7 +724,7 @@ class Estimate_FvCB_parameters:
         replicates = ACIH['Replicate'].unique()
         cols = ['Rd','Theta','Jmax','k2LL','Ci','Iinc','A','O']  # RD THETA JMAX K2LL CI IINC A;
         vcmax_data = pd.DataFrame([],columns = cols)
-        O2 = [210,20]
+        O2 = [210]
         for O in O2:
             self.gas_exch_measurement.set_O2(O/1000)
             ACIH = self.gas_exch_measurement.get_ACI_data()
@@ -781,7 +782,9 @@ class Estimate_FvCB_parameters:
         return vcmax_data
        
     def calculate_A(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+#        vcmax,TP,R,jmax = xo
         vcmax,TP,R = xo
+        
         df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
@@ -796,7 +799,6 @@ class Estimate_FvCB_parameters:
         sco = sco.astype(float)
         gamma_x = 0.5*O/sco
         gm0 = 0
-#        R = 1;        
         #Rubisco-limited part;
         kmc = 267
         kmo = 164
@@ -808,7 +810,7 @@ class Estimate_FvCB_parameters:
         AAR = (1.+R)*x2R + gamma_x + R*ci
         BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
         CCR = PR*QR
-        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2.*AAR)
+        AR = (-BBR-(BBR**2-4*AAR*CCR)**0.5)/(2*AAR)
         #Electron transport limited part;
         BB = k2LL*i_inc + jmax;
         J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
@@ -816,10 +818,10 @@ class Estimate_FvCB_parameters:
         x2J = 2*gamma_x;
         PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
         QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
-        AAJ = (1.+R)*x2J + gamma_x + R*ci;
+        AAJ = (1+R)*x2J + gamma_x + R*ci;
         BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
         CCJ = PJ*QJ;
-        AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        AJ = (-BBJ-(BBJ**2-4*AAJ*CCJ)**0.5)/(2*AAJ);
         #TPU limited part;
         AP = 3*TP-rd;
         A1 = np.minimum(AR,AJ)
@@ -828,7 +830,9 @@ class Estimate_FvCB_parameters:
  
 
     def calculate_A_mod_ave(self,xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc):
+#        vcmax,TP,R,jmax = xo
         vcmax,TP,R = xo
+        
         df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         rd = np.nanmean(rd)
@@ -860,10 +864,10 @@ class Estimate_FvCB_parameters:
         x2R = kmm
         PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
         QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
-        AAR = (1.+R)*x2R + gamma_x + R*ci
+        AAR = (1+R)*x2R + gamma_x + R*ci
         BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
         CCR = PR*QR
-        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2.*AAR)
+        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2*AAR)
         #Electron transport limited part;
         BB = k2LL*i_inc + jmax;
         J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
@@ -931,8 +935,10 @@ class Estimate_FvCB_parameters:
         k2LL = inputs.get('k2LL')
         sco = inputs.get('Sco')
         
-        bnds=((0,0,0),(1000,70,10)) 
-        x0 = np.array([200,12,5])        #Vcmax, TP ,R   ,gm0  
+#        bnds=((0,0,0,0),(1000,70,20,500)) 
+#        x0 = np.array([200,12,0.5,150])        #Vcmax,TP,sigma,Jmax
+        bnds=((0,0,0),(1000,70,20)) 
+        x0 = np.array([200,12,0.5])        #Vcmax,TP,sigma,Jmax        
         result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
 #        result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
         
@@ -945,21 +951,29 @@ class Estimate_FvCB_parameters:
         var_1=2*S*G[0,0]/degfr;
         var_2=2*S*G[1,1]/degfr;
         var_3=2*S*G[2,2]/degfr;
+#        var_4=2*S*G[3,3]/degfr;
         
         var_1 = np.sqrt(var_1)
         var_2 = np.sqrt(var_2)
         var_3 = np.sqrt(var_3)
+#        var_4 = np.sqrt(var_4)
 
         if result.success:
             self.plot_A(result.x,rd,jmax,theta,k2LL,sco)
+#            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err','Jmax','Jmax_err']
             cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err']
+            
             df=pd.DataFrame([],columns=cols)
             df.loc[0,'Vcmax'] = result.x[0]
             df.loc[0,'Tp'] = result.x[1]
             df.loc[0,'Sigma_gm'] = result.x[2]
+#            df.loc[0,'Jmax'] = result.x[3]
+            
             df.loc[0,'Vcmax_err'] = var_1
             df.loc[0,'Tp_err'] = var_2
             df.loc[0,'Sigma_gm_err'] = var_3
+#            df.loc[0,'Jmax_err'] = var_4
+            
             return df
         else:
             raise ValueError(result.message)
@@ -1007,7 +1021,7 @@ class Estimate_FvCB_parameters:
     def get_vcmax_data_individual(self,Rd,jmax,theta,K2LL,replicate):
         cols = ['Rd','Theta','Jmax','k2LL','Ci','Iinc','A','O']  # RD THETA JMAX K2LL CI IINC A;
         vcmax_data = pd.DataFrame([],columns = cols)
-        O2 = [210,20]
+        O2 = [210]
         for O in O2:
             self.gas_exch_measurement.set_O2(O/1000)
             ACIH = self.gas_exch_measurement.get_ACI_data()
@@ -1045,34 +1059,21 @@ class Estimate_FvCB_parameters:
 
     def calculate_A_individual_plot(self,xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci,i_inc):
         vcmax,TP,R = xo
-#        df_vcmax = self.get_vcmax_data_individual_plot(rds,jmaxs,thetas,k2LLs,replicate)
-#        rd = df_vcmax['Rd'].values.astype(float)
-#        rd = np.nanmean(rd)
-#        jmax = df_vcmax['Jmax'].values.astype(float)
-#        jmax = np.nanmean(jmax)
-#        
-#        theta = df_vcmax['Theta'].values.astype(float)
-#        theta = np.nanmean(theta)
-#        
-#        k2LL = df_vcmax['k2LL'].values.astype(float)
-#        k2LL = np.nanmean(k2LL)
-#        rd = df_vcmax['Rd'].values.astype(float)
-        rd = np.nanmean(rds)
-#        jmax = df_vcmax['Jmax'].values.astype(float)
-        jmax = np.nanmean(jmaxs)
-        
-#        theta = df_vcmax['Theta'].values.astype(float)
-        theta = np.nanmean(thetas)
-        
-#        k2LL = df_vcmax['k2LL'].values.astype(float)
-        k2LL = np.nanmean(k2LLs)
+        df_vcmax = self.get_vcmax_data_individual_plot(rds,jmaxs,thetas,k2LLs,replicate)
+        rd = df_vcmax['Rd'].values.astype(float)
+        rd = np.nanmean(rd)
+        jmax = df_vcmax['Jmax'].values.astype(float)
+        jmax = np.nanmean(jmax)        
+        theta = df_vcmax['Theta'].values.astype(float)
+        theta = np.nanmean(theta)        
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        k2LL = np.nanmean(k2LL)
         
         O = 210 #mbar
 #        sco = 3.259
-        sco = sco.astype(float)        
+#        sco = sco.astype(float)        
         gamma_x = 0.5*O/sco
         gm0 = 0
-#        R = 1;        
         #Rubisco-limited part;
         kmc = 267
         kmo = 164

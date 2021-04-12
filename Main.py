@@ -588,12 +588,12 @@ inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
           'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':sco['Sco'].values}
 vcmax = parameters.estimate_Vcmax(inputs)
 
-#inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
-#          'Theta':Jmax_individual['theta'].values,\
-#          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':sco['Sco'].values}
-#vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
-#Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
-#Vcmax_values=Vcmax_values.append(Vcmaxs)
+inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
+          'Theta':Jmax_individual['theta'].values,\
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':sco['Sco'].values}
+vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
+Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
+Vcmax_values=Vcmax_values.append(Vcmaxs)
 
 
 df_params.loc[2,'Rd']=Rd
@@ -689,7 +689,7 @@ df_params.loc[3,'Tp_err']=vcmax['Tp_err'].values
 df_params.loc[3,'Sigma_gm']=vcmax['Sigma_gm'].values
 df_params.loc[3,'Sigma_gm_err']=vcmax['Sigma_gm_err'].values
 #Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
-#Vcmax_values.to_excel(PATH +'Parameters_Vcmax_variable_gm.xlsx', index = False)
+#Vcmax_values.to_excel(PATH +'Parameters_Vcmax_variable_gm_.xlsx', index = False)
 #df_params.to_excel(PATH +'Parameters_all.xlsx', index = False)
 
 
