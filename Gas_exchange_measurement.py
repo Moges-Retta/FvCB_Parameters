@@ -110,16 +110,18 @@ class Gas_exchange_measurement:
         A_CI_d = self.A_CI[self.A_CI['Oxygen level']==self.get_O2()]
         A_CI_d = A_CI_d[A_CI_d['Species']==self.get_species()]
         A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
-        replicates = A_CI_d['Replicate'].values
-        replicates=np.unique(replicates)
-        Ci_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
-        A_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
-        I_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
-        gs_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
-        PhiPSII_ave = np.empty((len(A_CI_d[A_CI_d['Replicate']==1]), 0), int)
+        replicates = A_CI_d['Replicate'].unique()
+
         cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
                 'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
+        df_ci = pd.DataFrame([])
+        df_A = pd.DataFrame([])
+        df_I = pd.DataFrame([])
+        df_gs = pd.DataFrame([])
+        df_phi = pd.DataFrame([])
+        count = 0
+
         for replicate in replicates:
             A_CI_r= A_CI_d[A_CI_d['Replicate']==replicate]
             Ci = A_CI_r['Intercellular CO2 concentration'].values
@@ -127,37 +129,38 @@ class Gas_exchange_measurement:
             I = A_CI_r['Irradiance'].values
             gs = A_CI_r['Stomatal conductance for CO2'].values
             PhiPS2 = A_CI_r['PhiPS2'].values
-           
-            Ci_ave= np.append(Ci_ave, np.array([Ci]).transpose(),axis=1)
-            A_ave=np.append(A_ave, np.array([A]).transpose(),axis=1)
-            I_ave=np.append(I_ave, np.array([I]).transpose(),axis=1)
-            gs_ave=np.append(gs_ave, np.array([gs]).transpose(),axis=1)
-            phiPS2_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
+            
+            df_ci.loc[:,count] = Ci
+            df_A.loc[:,count] = A
+            df_I.loc[:,count] = I
+            df_gs.loc[:,count] = gs
+            df_phi.loc[:,count] = PhiPS2
+
+            count+=1
         
-        df_ave.loc[:,'Irradiance'] = np.nanmean(I_ave,axis=1)
-        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(Ci_ave,axis=1)
-        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(A_ave,axis=1)
-        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(gs_ave,axis=1)
-        df_ave.loc[:,'PhiPS2'] = np.nanmean(phiPS2_ave,axis=1)
-        df_ave.loc[:,'Photo_err'] = np.nanstd(A_ave,axis=1)
-        df_ave.loc[:,'gs_err'] = np.nanstd(gs_ave,axis=1)
-        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(phiPS2_ave,axis=1)
+        df_ave.loc[:,'Irradiance'] = np.nanmean(df_I,axis=1)
+        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(df_ci,axis=1)
+        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(df_A,axis=1)
+        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(df_gs,axis=1)
+        df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
+        df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
+        df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
+        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)
         df_ave = df_ave.sort_values(by=['Intercellular CO2 concentration'])
-#        return [np.nanmean(I_ave,axis=1),np.nanmean(Ci_ave,axis=1),np.nanmean(A_ave,axis=1),np.nanmean(phiPS2_ave,axis=1),np.nanmean(gs_ave,axis=1),np.nanstd(A_ave,axis=1),np.nanstd(gs_ave,axis=1),np.nanstd(phiPS2_ave)]
         return df_ave
     
     def average_A_I(self):
         A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
         A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]
         A_I_d = A_I_d[A_I_d['Treatment']==self.get_treatment()]
-        replicates = A_I_d['Replicate'].values
-        replicates=np.unique(replicates)
-        I_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-        Ci_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-        A_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-        A_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-        gs_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
-        PhiPSII_ave = np.empty((len(A_I_d[A_I_d['Replicate']==1]), 0), int)
+        replicates = A_I_d['Replicate'].unique()
+
+        df_ci = pd.DataFrame([])
+        df_A = pd.DataFrame([])
+        df_I = pd.DataFrame([])
+        df_gs = pd.DataFrame([])
+        df_phi = pd.DataFrame([])
+        count = 0
         cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
                 'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
@@ -169,19 +172,21 @@ class Gas_exchange_measurement:
             Ci = A_I_r['Intercellular CO2 concentration'].values
             gs = A_I_r['Stomatal conductance for CO2'].values
             PhiPS2 = A_I_r['PhiPS2'].values
-            I_ave=np.append(I_ave, np.array([I]).transpose(),axis=1)
-            A_ave=np.append(A_ave, np.array([A]).transpose(),axis=1)
-            Ci_ave=np.append(Ci_ave, np.array([Ci]).transpose(),axis=1)
-            gs_ave=np.append(gs_ave, np.array([gs]).transpose(),axis=1)
-            PhiPSII_ave=np.append(PhiPSII_ave, np.array([PhiPS2]).transpose(),axis=1)
-        df_ave.loc[:,'Irradiance'] = np.nanmean(I_ave,axis=1)
-        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(Ci_ave,axis=1)
-        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(A_ave,axis=1)
-        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(gs_ave,axis=1)
-        df_ave.loc[:,'PhiPS2'] = np.nanmean(PhiPSII_ave,axis=1)
-        df_ave.loc[:,'Photo_err'] = np.nanstd(A_ave,axis=1)
-        df_ave.loc[:,'gs_err'] = np.nanstd(gs_ave,axis=1)
-        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(PhiPSII_ave,axis=1)        
+            df_ci.loc[:,count] = Ci
+            df_A.loc[:,count] = A
+            df_I.loc[:,count] = I
+            df_gs.loc[:,count] = gs
+            df_phi.loc[:,count] = PhiPS2
+            count+=1
+            
+        df_ave.loc[:,'Irradiance'] = np.nanmean(df_I,axis=1)
+        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(df_ci,axis=1)
+        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(df_A,axis=1)
+        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(df_gs,axis=1)
+        df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
+        df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
+        df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
+        df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)        
         df_ave = df_ave.sort_values(by=['Irradiance'])            
         return df_ave
         
@@ -224,10 +229,23 @@ class Gas_exchange_measurement:
                 m.append("")
         for i in range(len(x)):
                 axis.plot(x[i]-60, y[i], color='red',marker=m[i])
+                
+    def show_significant_gs(self,p_values,gs,x,axis):
+        m=[]
+        scale_factor=0.5 # to add p values to A       
+        p_values = [element * scale_factor for element in p_values]        
+        y = p_values+gs;
+        for stat in p_values:                
+            if stat<0.05*scale_factor:
+                m.append("*")
+            else:
+                m.append("")
+        for i in range(len(x)):
+                axis.plot(x[i]-60, y[i], color='red',marker=m[i])                
                     
     def compare_A(self,df):
         fig, ax = plt.subplots(2,2,constrained_layout=True)
-        plt.rcParams["figure.figsize"] = (10,10)
+        plt.rcParams["figure.figsize"] = (30,10)
         
         plants = ['H.Incana','B.Nigra']
         count = 0
@@ -236,17 +254,19 @@ class Gas_exchange_measurement:
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='HL']
             A_CI_d = A_CI_d[A_CI_d['Response']=='ACI']
+            
             A_I_d = df[df['Species']==plant]
             A_I_d = A_I_d[A_I_d['Treatment']=='HL']
             A_I_d = A_I_d[A_I_d['Response']=='AI']
-            
+
             AHL_CI = A_CI_d['A'].values
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev A'].values
             ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_CI = self.t_test_A_CI('HL') 
+            stat_HL_CI = stat_HL_CI['p_A'].values
 
-            if plant == 'Hi':
+            if plant == 'H.Incana':
                 self.show_significant(stat_HL_CI,AHL_CI,Ci,ax[0][0])
                                 
             AHL_I = A_I_d['A'].values
@@ -254,8 +274,9 @@ class Gas_exchange_measurement:
             err = A_I_d['Std.dev A'].values
             ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_I = self.t_test_A_I('HL')
+            stat_HL_I = stat_HL_I['p_A'].values
             
-            if plant == 'Hi':
+            if plant == 'H.Incana':
                 self.show_significant(stat_HL_I,AHL_I,Iinc,ax[1][0])           
                  
             A_CI_d = df[df['Species']==plant]
@@ -269,47 +290,56 @@ class Gas_exchange_measurement:
             
             ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_LL_CI = self.t_test_A_CI('LL')
+            stat_LL_CI = stat_LL_CI['p_A'].values
 
-            if plant == 'Hi':
+            if plant == 'H.Incana':
                 self.show_significant(stat_LL_CI,ALL_CI,Ci,ax[0][1])           
             
             A_I_d = df[df['Species']==plant]
             A_I_d = A_I_d[A_I_d['Treatment']=='LL']
             A_I_d = A_I_d[A_I_d['Response']=='AI']
+            
             ALL_I = A_I_d['A'].values
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev A'].values
             stat_LL_I = self.t_test_A_I('LL')
-
-            if plant == 'Hi':
+            stat_LL_I = stat_LL_I['p_A'].values
+            if plant == 'H.Incana':
                 self.show_significant(stat_LL_I,ALL_I,Iinc,ax[1][1]) 
-                
-            if plant=='Hi':
-                name="H. Incana"
-            else:
-                name="B. Nigra"
                       
-            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=name,mfc='white',mec='black',markersize=8)
+            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,mfc='white',mec='black',markersize=8)
             count+=1
             
         
         ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)",fontsize=16)
         ax[1][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
         ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
-        ax[1][0].set_xlabel("Irradiance (µmol $mol^{-1}$)")   
+        ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")   
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
-        ax[1][1].set_xlabel("Irradiance (µmol $mol^{-1}$)")
-        ax[0][1].set_ylim(top=80)
+        ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
+        ax[0][1].set_ylim(top=85)
+        ax[0][0].set_ylim(top=85)
+        
         ax[1][0].set_ylim(top=60)
         ax[1][1].set_ylim(top=60)
+        
+        ax[0][1].set_ylim(bottom=0)
+        ax[1][0].set_ylim(bottom=-5)
+        ax[1][1].set_ylim(bottom=-5)
+        ax[0][0].set_ylim(bottom=0)
+        
+        ax[1][1].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[1][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][1].xaxis.set_ticks(np.arange(0, 2200, 400))
         
         ax[1][1].legend(loc='lower right', fontsize='x-large')     
 #        fig.savefig('Compare_A_response.tiff', dpi=300, format="tiff", pil_kwargs={"compression": "tiff_lzw"})
 
     def compare_gs(self,df):
         fig, ax = plt.subplots(2,2,constrained_layout=True)
-        plt.rcParams["figure.figsize"] = (10,10)
-        plants = ['Hi','BN']
+        plt.rcParams["figure.figsize"] = (30,10)
+        plants = ['H.Incana','B.Nigra']
         count = 0
         symbol=['ko','k<']
         for plant in plants:                
@@ -324,12 +354,21 @@ class Gas_exchange_measurement:
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev gs'].values
             ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],markersize=8)
-            
+            stat_HL_CI = self.t_test_A_CI('HL') 
+            stat_HL_CI = stat_HL_CI['p_gs'].values
+
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_HL_CI,AHL_CI,Ci,ax[0][0])
+                
             AHL_I = A_I_d['gs'].values
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev gs'].values
             ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],markersize=8)
+            stat_HL_I = self.t_test_A_I('HL')
+            stat_HL_I = stat_HL_I['p_gs'].values
             
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_HL_I,AHL_I,Iinc,ax[1][0])               
                  
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='LL']
@@ -341,7 +380,12 @@ class Gas_exchange_measurement:
             err = A_CI_d['Std.dev gs'].values
             
             ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],markersize=8)
-            
+            stat_LL_CI = self.t_test_A_CI('LL')
+            stat_LL_CI = stat_LL_CI['p_gs'].values
+
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_LL_CI,ALL_CI,Ci,ax[0][1])    
+                
             A_I_d = df[df['Species']==plant]
             A_I_d = A_I_d[A_I_d['Treatment']=='LL']
             A_I_d = A_I_d[A_I_d['Response']=='AI']
@@ -350,23 +394,39 @@ class Gas_exchange_measurement:
             err = A_I_d['Std.dev gs'].values
             
             ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,markersize=8)
+            stat_LL_I = self.t_test_A_I('LL')
+            stat_LL_I = stat_LL_I['p_gs'].values
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_LL_I,ALL_I,Iinc,ax[1][1]) 
+            
             count+=1
         
         ax[0][0].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
         ax[1][0].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
         ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
-        ax[1][0].set_xlabel("Irradiance (µmol $mol^{-1}$)")   
+        ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")   
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
-        ax[1][1].set_xlabel("Irradiance (µmol $mol^{-1}$)")
-        ax[0][1].set_ylim(top=1.1)
-        ax[1][1].set_ylim(top=1.1)
+        ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
+        ax[0][1].set_ylim(top=1.4)
+        ax[1][1].set_ylim(top=1.2)
+        ax[0][0].set_ylim(top=1.4)
+        ax[1][0].set_ylim(top=1.2)
+        ax[0][1].set_ylim(bottom=0.2)
+        ax[1][1].set_ylim(bottom=0.1)
+        ax[0][0].set_ylim(bottom=0.2)
+        ax[1][0].set_ylim(bottom=0.1)
+        ax[1][1].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[1][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][1].xaxis.set_ticks(np.arange(0, 2200, 400))
+        
         ax[1][1].legend(loc='lower right', fontsize='x-large')            
         
 
     def compare_PhiPSII(self,df):
         fig, ax = plt.subplots(2,2,constrained_layout=True)
         plt.rcParams["figure.figsize"] = (10,10)
-        plants = ['Hi','BN']
+        plants = ['H.Incana','B.Nigra']
         count = 0
         symbol=['ko','k<']
         for plant in plants:                
@@ -381,12 +441,21 @@ class Gas_exchange_measurement:
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev PhiPS2'].values
             ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],markersize=8)
-            
+            stat_HL_CI = self.t_test_A_CI('HL') 
+            stat_HL_CI = stat_HL_CI['p_phi'].values
+
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_HL_CI,AHL_CI,Ci,ax[0][0])
+                
             AHL_I = A_I_d['PhiPS2'].values
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev PhiPS2'].values
             ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],markersize=8)
+            stat_HL_I = self.t_test_A_I('HL')
+            stat_HL_I = stat_HL_I['p_phi'].values
             
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_HL_I,AHL_I,Iinc,ax[1][0])             
                  
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='LL']
@@ -398,7 +467,11 @@ class Gas_exchange_measurement:
             err = A_CI_d['Std.dev PhiPS2'].values
             
             ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],markersize=8)
-            
+            stat_LL_CI = self.t_test_A_CI('LL')
+            stat_LL_CI = stat_LL_CI['p_phi'].values
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_LL_CI,ALL_CI,Ci,ax[0][1])   
+                
             A_I_d = df[df['Species']==plant]
             A_I_d = A_I_d[A_I_d['Treatment']=='LL']
             A_I_d = A_I_d[A_I_d['Response']=='AI']
@@ -407,17 +480,32 @@ class Gas_exchange_measurement:
             err = A_I_d['Std.dev PhiPS2'].values
             
             ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,markersize=8)
+            stat_LL_I = self.t_test_A_I('LL')
+            stat_LL_I = stat_LL_I['p_phi'].values
+            if plant == 'H.Incana':
+                self.show_significant_gs(stat_LL_I,ALL_I,Iinc,ax[1][1])             
+            
             count+=1
         
         ax[0][0].set_ylabel("\u03A6$_{PSII}$ (-)")
         ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
         ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
-        ax[1][0].set_xlabel("Irradiance (µmol $mol^{-1}$)")   
+        ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")   
         ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")        
-        ax[1][1].set_xlabel("Irradiance (µmol $mol^{-1}$)")
+        ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
+        ax[0][0].set_ylim(top=0.50)        
         ax[0][1].set_ylim(top=0.50)
         ax[1][1].set_ylim(top=1)
         ax[1][0].set_ylim(top=1)
+        ax[0][0].set_ylim(bottom=0.10)        
+        ax[0][1].set_ylim(bottom=0.10)
+        ax[1][1].set_ylim(bottom=0.2)
+        ax[1][0].set_ylim(bottom=0.2)
+        ax[1][1].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[1][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))
+        ax[0][1].xaxis.set_ticks(np.arange(0, 2200, 400))
+        
         ax[1][1].legend(loc='upper right', fontsize='x-large')                   
         
         
@@ -436,13 +524,26 @@ class Gas_exchange_measurement:
         PARi = A_I_d_BN['Irradiance'].values
         PARi=np.unique(PARi)
         
+        p_values = pd.DataFrame([],columns = ['p_A','p_gs','p_phi'])
+        count = 0
         for Par in PARi:
             A_I_r_BN= A_I_d_BN[A_I_d_BN['Irradiance']==Par]
             A_I_r_Hi= A_I_d_Hi[A_I_d_Hi['Irradiance']==Par]
             AHi = A_I_r_Hi['Net CO2 assimilation rate'].values
             ABN = A_I_r_BN['Net CO2 assimilation rate'].values
             [t,p]= stats.ttest_ind(AHi,ABN, equal_var = False)
-            p_values.append(p)
+            p_values.loc[count,'p_A']=p
+           
+            gsHi = A_I_r_Hi['Stomatal conductance for CO2'].values
+            gsBN = A_I_r_BN['Stomatal conductance for CO2'].values
+            [t,p]= stats.ttest_ind(gsHi,gsBN, equal_var = False)
+            p_values.loc[count,'p_gs']=p            
+            
+            phi_Hi = A_I_r_Hi['PhiPS2'].values
+            phi_ABN = A_I_r_BN['PhiPS2'].values
+            [t,p]= stats.ttest_ind(phi_Hi,phi_ABN, equal_var = False)
+            p_values.loc[count,'p_phi']=p            
+            count+=1
         return p_values
              
     def t_test_A_CI(self,treatment):
@@ -453,20 +554,31 @@ class Gas_exchange_measurement:
         A_CI_d_Hi  = self.A_CI[self.A_CI['Species']=='H.Incana']        
         A_CI_d_Hi  = A_CI_d_Hi[A_CI_d_Hi['Oxygen level']==self.get_O2()]
         A_CI_d_Hi = A_CI_d_Hi[A_CI_d_Hi['Treatment']==treatment]
-        p_values = []
+
         par_values = [400,300,250,200,150,100,500,600,700,850,1000,1200,1500,1800,2200]*4
         A_CI_d_BN['Irradiance']=par_values
         A_CI_d_Hi['Irradiance']=par_values
         PARi = A_CI_d_BN['Irradiance'].values
         PARi=np.unique(PARi)
-        
+
+        p_values = pd.DataFrame([],columns = ['p_A','p_gs','p_phi'])
+        count = 0
         for Par in PARi:
             A_CI_r_BN= A_CI_d_BN[A_CI_d_BN['Irradiance']==Par]
             A_CI_r_Hi= A_CI_d_Hi[A_CI_d_Hi['Irradiance']==Par]
             AHi = A_CI_r_Hi['Net CO2 assimilation rate'].values
             ABN = A_CI_r_BN['Net CO2 assimilation rate'].values
             [t,p]= stats.ttest_ind(AHi,ABN, equal_var = False)
-            p_values.append(p)
+            p_values.loc[count,'p_A']=p
+            gsHi = A_CI_r_Hi['Stomatal conductance for CO2'].values
+            gsBN = A_CI_r_BN['Stomatal conductance for CO2'].values
+            [t,p]= stats.ttest_ind(gsHi,gsBN, equal_var = False)
+            p_values.loc[count,'p_gs']=p            
+            phi_Hi = A_CI_r_Hi['PhiPS2'].values
+            phi_BN = A_CI_r_BN['PhiPS2'].values
+            [t,p]= stats.ttest_ind(phi_Hi,phi_BN, equal_var = False)
+            p_values.loc[count,'p_phi']=p            
+            count+=1
         return p_values
              
     
@@ -537,8 +649,7 @@ class Gas_exchange_measurement:
 #        Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
         return Gas_Exchange_data_corr
         
-        
-        
+
         
         
         

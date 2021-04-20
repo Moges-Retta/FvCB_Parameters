@@ -344,7 +344,7 @@ class Estimate_FvCB_parameters:
             AI_r = AI[AI['Replicate']==replicate]
             Iinc = AI_r['Irradiance'].values   
             PhiPS2 = AI_r['PhiPS2'].values            
-            bnds=((0,0,0),(1,1,700)) 
+            bnds=((0,0,0),(1,1,1000)) 
             x0 = np.array([0.78,0.7,150])       #phi2LL,thetha,J2max         
             result = optimize.least_squares(self.model_phi2LL_individual,x0,args=[Iinc,PhiPS2],method='trf',bounds=bnds)
             res = self.model_phi2LL_individual(result.x,Iinc,PhiPS2)
@@ -428,16 +428,16 @@ class Estimate_FvCB_parameters:
         phiPS2 = AI['PhiPS2'].values
         J = s*Iinc*phiPS2
         SQ = ((k2LL*Iinc+Jmax)**2-4*theta*k2LL*Jmax*Iinc)**0.5
-        J_mod = (k2LL*Iinc+Jmax-SQ)/(2*theta)            
+        J_mod = (k2LL*Iinc+Jmax-SQ)/(2*theta) 
         return J_mod-J 
     
     def plot_Jmax_fit(self,params,s,PHI2LL): 
         plt.rcParams["figure.figsize"] = (10,10)
 
-        AI = self.gas_exch_measurement.average_A_I()
+        AI = self.gas_exch_measurement.get_AI_data()
         Iave = AI['Irradiance'].values
         phiPS2 = AI['PhiPS2'].values
-        std_phiPS2 = AI['PhiPS2_err'].values
+        
         
         Jmax,theta = params
         k2LL = s*PHI2LL
@@ -445,11 +445,23 @@ class Estimate_FvCB_parameters:
         SQ = ((k2LL*Iave+Jmax)**2-4*theta*k2LL*Jmax*Iave)**0.5
         J_mod = (k2LL*Iave+Jmax-SQ)/(2*theta) 
         
+        JCF = np.array([J]).transpose()
+        JCF = np.reshape(J,(4,14))
+        Iinc = np.array([Iave]).transpose()
+        Iinc = np.reshape(Iinc,(4,14))
+        J_mod = np.array([J_mod]).transpose()
+        J_mod = np.reshape(J_mod,(4,14))
+        
+        JCF_ave = stats.gmean(JCF,axis=0)
+        stderr = stats.tstd(JCF,axis=0)
+        Iinc_ave = stats.gmean(Iinc,axis=0)
+        J_mod_ave = stats.gmean(J_mod,axis=0)
+
         fig, ax = plt.subplots()
-        ax.errorbar(Iave,J,std_phiPS2*J/2,fmt='ko',label='CF') 
-        ax.plot(Iave,J_mod,'k-',linewidth=2.0,label='Model')  
+        ax.errorbar(Iinc_ave,JCF_ave,stderr,fmt='ko',label='CF') 
+        ax.plot(Iinc_ave,J_mod_ave,'k-',linewidth=2.0,label='Model')  
         ax.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)')
-        ax.set_ylabel('ATP production (µmol $m^{-2}$ $s^{-1}$)')  
+        ax.set_ylabel('J (µmol $m^{-2}$ $s^{-1}$)')  
         ax.legend(loc='lower right', fontsize='x-large')  
         
         
@@ -475,7 +487,7 @@ class Estimate_FvCB_parameters:
 
 
     def estimate_phi2LL(self):
-        bnds=((0,0,0),(1,1,700)) 
+        bnds=((0,0,0),(1,1,1000)) 
         x0 = np.array([0.78,0.7,150])       #phi2LL,thetha,J2max         
         result = optimize.least_squares(self.model_phi2LL,x0,method='trf',bounds=bnds)
         res = self.model_phi2LL(result.x)
@@ -602,11 +614,11 @@ class Estimate_FvCB_parameters:
         
         self.gas_exch_measurement.set_O2(0.21)
         ACIH = self.gas_exch_measurement.get_ACI_data()
-        ACIH = ACIH[ACIH['CO2R'].between(50,210)]
+        ACIH = ACIH[ACIH['CO2R'].between(40,210)]
 
         self.gas_exch_measurement.set_O2(0.02)
         ACIL = self.gas_exch_measurement.get_ACI_data()
-        ACIL = ACIL[ACIL['CO2R'].between(50,210)]
+        ACIL = ACIL[ACIL['CO2R'].between(40,210)]
         cols =  ['Replicate','CiH','AH','CiL','AL','Rd']        
         df = pd.DataFrame([],columns=cols)
         replicates = ACIH['Replicate'].unique()
@@ -619,7 +631,7 @@ class Estimate_FvCB_parameters:
             ACIL_r = ACIL[ACIL['Replicate']==replicate]
             AL = ACIL_r['Net CO2 assimilation rate'].values
             CiL = ACIL_r['Intercellular CO2 concentration'].values  
-            Rd_value = Rd_values[count]
+            Rd_value = Rd_values[count]*-1
             df2.loc[:,'AH'] = AH
             df2.loc[:,'CiH'] = CiH
             df2.loc[:,'Replicate'] = replicate
@@ -654,44 +666,45 @@ class Estimate_FvCB_parameters:
         df.loc[0,'bL'] = bL
         df.loc[0,'intercept_bL'] = intercept_bL
         df.loc[0,'Std.err_bL'] = result.stderr            
-        
-        
-#        fig, (ax1, ax2) = plt.subplots(ncols=2)        
-#        ax1.plot(CiH,AH,'ko')
-#        ax1.plot(CiH,bH*CiH+intercept_bH)
-#        ax2.plot(CiL,AL,'ko')
-#        ax2.plot(CiL,bL*CiL+intercept_bL)        
 #        
-#        text = 'y = ' + str(np.round(bH,3)) + '*x + '+str(np.round(intercept_bH,3))\
-#              + ' \n R2 = '+str(np.round(R2_bH,3))
-#
-#        text2 = 'y = ' + str(np.round(bL,3)) + '*x + '+str(np.round(intercept_bL,3))\
-#              + ' \n R2 = '+str(np.round(R2_bL,3))
-#              
-#        ax1.text(min(CiH)+1,max(AH)-3,text)
-#        ax2.text(min(CiL)+1,max(AL)-3,text2)
-#        plt.show()   
+        # plt.rcParams["figure.figsize"] = (10,5)
+        # fig, (ax1, ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        # ax1.plot(CiH,AH,'ko')
+        # ax1.plot(CiH,bH*CiH+intercept_bH)
+        # ax1.set_ylabel('AH (µmol $m^{-2}$ $s^{-1}$)')
+        # ax1.set_xlabel('CiH (µbar)')
+        
+        # ax2.plot(CiL,AL,'ko')
+        # ax2.plot(CiL,bL*CiL+intercept_bL)        
+        # ax2.set_ylabel('AL (µmol $m^{-2}$ $s^{-1}$)')
+        # ax2.set_xlabel('CiL (µbar)')
+       
+        # text = 'y = ' + str(np.round(bH,3)) + '*x + '+str(np.round(intercept_bH,3))\
+        #       + ' \n R2 = '+str(np.round(R2_bH,3))
+
+        # text2 = 'y = ' + str(np.round(bL,3)) + '*x + '+str(np.round(intercept_bL,3))\
+        #       + ' \n R2 = '+str(np.round(R2_bL,3))
+              
+        # ax1.text(min(CiH)+1,max(AH)-3,text)
+        # ax2.text(min(CiL)+1,max(AL)-3,text2)
+        # plt.show()   
         return df
         
         
     def model_Sco(self,Sco,Rd_values):
         df = self.estimate_bH_bL(Rd_values)
         data = self.get_Sco_data(Rd_values)
-        CiH = data['CiH'].values
         AH = data['AH'].values   
-        CiL = data['CiL'].values
         AL = data['AL'].values 
         
-        AH = data['AH'].values
         Rd = data['Rd'].values      
-        AL = data['AL'].values                
         bH = df['bH'].values
         bL = df['bL'].values
         CiH = data['CiH'].values*constants.atm/10**5
         CiL = data['CiL'].values*constants.atm/10**5   
         OH = 210 #mbar
         OL = 20
-        AH_mod = (AL + Rd)*bH/bL - (0.5*(OH-OL)/Sco + CiL-CiH)*bH + Rd
+        AH_mod = (AL + Rd)*bH/bL - (0.5*(OH-OL)/Sco + CiL-CiH)*bH - Rd
         diff = (AH-AH_mod).astype(np.float64)
         return diff
         
@@ -722,9 +735,9 @@ class Estimate_FvCB_parameters:
         self.gas_exch_measurement.set_O2(0.21)
         ACIH = self.gas_exch_measurement.get_ACI_data()
         replicates = ACIH['Replicate'].unique()
-        cols = ['Rd','Theta','Jmax','k2LL','Ci','Iinc','A','O']  # RD THETA JMAX K2LL CI IINC A;
+        cols = ['Rd','Theta','Jmax','k2LL','Ci','Iinc','A','O','curve']  # RD THETA JMAX K2LL CI IINC A;
         vcmax_data = pd.DataFrame([],columns = cols)
-        O2 = [210]
+        O2 = [210,20]
         for O in O2:
             self.gas_exch_measurement.set_O2(O/1000)
             ACIH = self.gas_exch_measurement.get_ACI_data()
@@ -748,13 +761,16 @@ class Estimate_FvCB_parameters:
                 df.loc[:,'k2LL'] = k2LL
                 df.loc[:,'Ci'] = ci
                 df.loc[:,'Iinc'] = i_inc
-                df.loc[:,'O'] = O                
+                df.loc[:,'O'] = O    
+                df.loc[:,'curve'] = 'ACI'                               
                 df_vcmax = df_vcmax.append(df)
                 count+=1
             vcmax_data = vcmax_data.append(df_vcmax)   
             
             AIH = self.gas_exch_measurement.get_AI_data()            
             count = 0 
+            df_vcmax = pd.DataFrame([],columns = cols)
+            
             for replicate in replicates:
                 df = pd.DataFrame([],columns = cols)
                 ACIH_r = AIH[AIH['Replicate']==replicate]
@@ -772,7 +788,8 @@ class Estimate_FvCB_parameters:
                 df.loc[:,'k2LL'] = k2LL
                 df.loc[:,'Ci'] = ci
                 df.loc[:,'Iinc'] = i_inc
-                df.loc[:,'O'] = O                                
+                df.loc[:,'O'] = O  
+                df.loc[:,'curve'] = 'AI'                                         
                 df_vcmax = df_vcmax.append(df)
                 count+=1 
             vcmax_data = vcmax_data.append(df_vcmax) 
@@ -782,23 +799,21 @@ class Estimate_FvCB_parameters:
         return vcmax_data
        
     def calculate_A(self,xo,rds,jmaxs,thetas,k2LLs,sco):
-#        vcmax,TP,R,jmax = xo
-        vcmax,TP,R = xo
+        vcmax,TP,R,gm0 = xo
         
         df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
         k2LL = df_vcmax['k2LL'].values.astype(float)
-        ci = df_vcmax['Ci'].values.astype(float)
+        ci = df_vcmax['Ci'].values.astype(float) #µbar
         i_inc = df_vcmax['Iinc'].values.astype(float)
         O = df_vcmax['O'].values.astype(float)
         
 #        O = 210 #mbar
-#        sco = 3.259
         sco = sco.astype(float)
         gamma_x = 0.5*O/sco
-        gm0 = 0
+#        gm0 = 0
         #Rubisco-limited part;
         kmc = 267
         kmo = 164
@@ -826,14 +841,21 @@ class Estimate_FvCB_parameters:
         AP = 3*TP-rd;
         A1 = np.minimum(AR,AJ)
         A_mod = np.minimum(A1,AP) 
+        
         return A_mod
  
 
-    def calculate_A_mod_ave(self,xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc):
-#        vcmax,TP,R,jmax = xo
-        vcmax,TP,R = xo
+    def calculate_A_mod_ave(self,xo,rds,jmaxs,thetas,k2LLs,sco,ci_ave,i_inc,curve):
+        vcmax,TP,R,gm0 = xo
         
         df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        if curve:
+                df_vcmax = df_vcmax[df_vcmax['curve']==curve]
+                df_vcmax = df_vcmax[df_vcmax['O']==210]
+
+        ci = df_vcmax['Ci'].values.astype(float)        
+        i_inc = df_vcmax['Iinc'].values.astype(float)        
+        
         rd = df_vcmax['Rd'].values.astype(float)
         rd = np.nanmean(rd)
         jmax = df_vcmax['Jmax'].values.astype(float)
@@ -845,17 +867,13 @@ class Estimate_FvCB_parameters:
         k2LL = df_vcmax['k2LL'].values.astype(float)
         k2LL = np.nanmean(k2LLs)
 #        
-#        ci = df_vcmax['Ci'].values.astype(float)
-#        i_inc = df_vcmax['Iinc'].values.astype(float)
 #        O = df_vcmax['O'].values.astype(float)
         O = 210 #mbar
-#        sco = 3.259
         sco = sco.astype(float)
         sco = np.nanmean(sco)
         
         gamma_x = 0.5*O/sco
-        gm0 = 0
-#        R = 1;        
+#        gm0 = 0
         #Rubisco-limited part;
         kmc = 267
         kmo = 164
@@ -883,41 +901,171 @@ class Estimate_FvCB_parameters:
         AP = 3*TP-rd;
         A1 = np.minimum(AR,AJ)
         A_mod = np.minimum(A1,AP) 
-        return A_mod
+        
+        AA = A_mod + R*(A_mod+rd)+gm0*(ci-gamma_x) 
+        gm_mod = (AA + (AA**2-4*(ci-gamma_x)*A_mod*gm0)**0.5)/(2*(ci-gamma_x))
+        
+        
+        # A_mod = np.array([A_mod]).transpose()
+        # A_mod = np.reshape(A_mod,(4,len(ci_ave)))
+        # J = np.array([J]).transpose()
+        # J = np.reshape(J,(4,len(ci_ave)))
+        # gm_mod = np.array([gm_mod]).transpose()
+        # gm_mod = np.reshape(gm_mod,(4,len(ci_ave)))
+        
+        
+        return [A_mod,gm_mod,J]
 
-    
-    def plot_A(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+
+    def plot_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
         plt.rcParams["figure.figsize"] = (15,8) 
         plt.rcParams.update({'font.size': 12})
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
         A = ACI['Net CO2 assimilation rate'].values 
-        A_err = ACI['Photo_err'].values/2 
-        ci = ACI['Intercellular CO2 concentration'].values
-        i_inc = ACI['Irradiance'].values       
-        A_mod_ci = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
+        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc = ACI['Irradiance'].values   
+        gamma_x = 0.5*210/sco
+        [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc,'')
+        A_mod_ci = np.array([A_mod_ci]).transpose()
+        A_mod_ci = np.reshape(A_mod_ci,(4,len_ci_pts))
+        J = np.array([J]).transpose()
+        J = np.reshape(J,(4,len_ci_pts))
+        gm_ci = np.array([gm_ci]).transpose()
+        gm_ci = np.reshape(gm_ci,(4,len_ci_pts))
+        
+        Rd = np.mean(rds)
+        AA = gamma_x*(J + 8*(A + Rd))
+        gm_ci =  A/(ci-AA/(J-4*(A+Rd)));
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
         A_i = AI['Net CO2 assimilation rate'].values 
-        A_err_i = AI['Photo_err'].values/2 
-        ci_i = AI['Intercellular CO2 concentration'].values
+        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
         i_inc_i = AI['Irradiance'].values       
-        A_mod_i = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
+        [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i,'')
+        AA = gamma_x*(J + 8*(A_i + Rd))
+        gm_i =  A_i/(ci_i-AA/(J-4*(A_i+Rd)));
+        
+        A_mod_i = np.array([A_mod_i]).transpose()
+        A_mod_i = np.reshape(A_mod_i,(4,len_i_pts))
+        J = np.array([J]).transpose()
+        J = np.reshape(J,(4,len_i_pts))
+        gm_i = np.array([gm_i]).transpose()
+        gm_i = np.reshape(gm_i,(4,len_i_pts))
+        
         
         fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
-        ax1.errorbar(ci,A,A_err,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,gm_ci,'ko',label='Variable J',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,gm_ci_cf,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.plot(i_inc_i,gm_i,'ko',label='Variable J',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,gm_i_cf,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))   
+            
+        plt.show()  
+        
+        
+    def plot_A(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        len_ci_pts = 15
+        len_i_pts = 14
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.get_ACI_data()
+        ACI = ACI[ACI['Oxygen level']==0.21]
+
+        A = ACI['Net CO2 assimilation rate'].values 
+        # A_err = ACI['Photo_err'].values/2 
+        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+
+        i_inc = ACI['Irradiance'].values       
+        [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc,'ACI')
+
+        A_mod_ci = np.array([A_mod_ci]).transpose()
+        A_mod_ci = np.reshape(A_mod_ci,(4,len_ci_pts))
+        J = np.array([J]).transpose()
+        J = np.reshape(J,(4,len_ci_pts))
+        gm_ci = np.array([gm_ci]).transpose()
+        gm_ci = np.reshape(gm_ci,(4,len_ci_pts))
+
+        A = np.array([A]).transpose()
+        A = np.reshape(A,(4,len_ci_pts))
+        ci = np.array([ci]).transpose()
+        ci = np.reshape(ci,(4,len_ci_pts)) 
+        Aave = np.nanmean(A,axis=0)
+        A_err_ci = np.std(A,axis=0)/2
+
+        ci = np.nanmean(ci,axis=0)
+        A_mod_ci = np.nanmean(A_mod_ci,axis=0)
+        df = pd.DataFrame([],columns = ['A','Ci','A_err'])        
+        df.loc[:,'A']=Aave
+        df.loc[:,'Ci']=ci
+        df.loc[:,'A_err']=A_err_ci
+        df = df.sort_values(by=['Ci'])
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.get_AI_data()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        # A_err_i = AI['Photo_err'].values/2 
+        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc_i = AI['Irradiance'].values       
+        [A_mod_i,gm_i,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i,'AI')
+        
+        A_mod_i = np.array([A_mod_i]).transpose()
+        A_mod_i = np.reshape(A_mod_i,(4,len_i_pts))
+        J = np.array([J]).transpose()
+        J = np.reshape(J,(4,len_i_pts))
+        gm_i = np.array([gm_i]).transpose()
+        gm_i = np.reshape(gm_i,(4,len_i_pts))
+        A_i = np.array([A_i]).transpose()
+        A_i = np.reshape(A_i,(4,len_i_pts))
+        ci_i = np.array([ci_i]).transpose()
+        ci_i = np.reshape(ci_i,(4,len_i_pts))           
+        i_inc_i = np.reshape(i_inc_i,(4,len_i_pts))           
+        
+        A_i_ave = np.nanmean(A_i,axis=0)
+        A_err_i = np.std(A_i,axis=0)/2
+        
+        ci_i = np.nanmean(ci_i,axis=0)
+        A_mod_i = np.nanmean(A_mod_i,axis=0)
+        i_inc_i = np.nanmean(i_inc_i,axis=0)
+
+        df2 = pd.DataFrame([],columns = ['A','Iinc','A_err'])        
+        df2.loc[:,'A']=A_i_ave
+        df2.loc[:,'Iinc']=i_inc_i
+        df2.loc[:,'A_err']=A_err_i
+        # df2 = df2.sort_values(by=['Iinc'])
+        
+        ci = df['Ci'].values
+        Aave = df['A'].values
+        A_err_ci = df['A_err'].values
+        i_inc_i = df2['Iinc'].values
+        A_i_ave = df2['A'].values
+        A_err_i = df2['A_err'].values      
+        
+        A_mod_ci = np.sort(A_mod_ci)
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.errorbar(ci,Aave,A_err_ci,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
         ax1.plot(ci,A_mod_ci,'k-',label='Model')
         ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
         ax1.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
         ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
-        ax2.errorbar(i_inc_i,A_i,A_err_i,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax2.errorbar(i_inc_i,A_i_ave,A_err_i,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
         ax2.plot(i_inc_i,A_mod_i,'k-',label='Model')
-        ax2.set_xlabel('Irradiance (µmol $mol^{-1}$)',fontsize=20)
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
         ax2.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)    
         ax2.legend(loc='lower right', fontsize='x-large')     
-        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))            
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))
+        
         plt.show()  
 
     
@@ -935,44 +1083,42 @@ class Estimate_FvCB_parameters:
         k2LL = inputs.get('k2LL')
         sco = inputs.get('Sco')
         
-#        bnds=((0,0,0,0),(1000,70,20,500)) 
-#        x0 = np.array([200,12,0.5,150])        #Vcmax,TP,sigma,Jmax
-        bnds=((0,0,0),(1000,70,20)) 
-        x0 = np.array([200,12,0.5])        #Vcmax,TP,sigma,Jmax        
+        bnds=((0,0,0,0),(1000,70,20,20)) 
+        x0 = np.array([200,12,0.5,1])        #Vcmax,TP,sigma,Jmax        
         result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
-#        result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
+        # result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
         
         res = self.model_Vcmax(result.x,rd,jmax,theta,k2LL,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
-        degfr=len(res)-3;
+        degfr=len(res)-4;
         G = np.linalg.pinv(H)
         var_1=2*S*G[0,0]/degfr;
         var_2=2*S*G[1,1]/degfr;
         var_3=2*S*G[2,2]/degfr;
-#        var_4=2*S*G[3,3]/degfr;
+        var_4=2*S*G[3,3]/degfr;
         
         var_1 = np.sqrt(var_1)
         var_2 = np.sqrt(var_2)
         var_3 = np.sqrt(var_3)
-#        var_4 = np.sqrt(var_4)
+        var_4 = np.sqrt(var_4)
 
         if result.success:
             self.plot_A(result.x,rd,jmax,theta,k2LL,sco)
-#            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err','Jmax','Jmax_err']
-            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err']
+            # self.plot_gm(result.x,rd,jmax,theta,k2LL,sco)
+            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err','gm0','gm0_err']
             
             df=pd.DataFrame([],columns=cols)
             df.loc[0,'Vcmax'] = result.x[0]
             df.loc[0,'Tp'] = result.x[1]
             df.loc[0,'Sigma_gm'] = result.x[2]
-#            df.loc[0,'Jmax'] = result.x[3]
+            df.loc[0,'gm0'] = result.x[3]
             
             df.loc[0,'Vcmax_err'] = var_1
             df.loc[0,'Tp_err'] = var_2
             df.loc[0,'Sigma_gm_err'] = var_3
-#            df.loc[0,'Jmax_err'] = var_4
+            df.loc[0,'gm0_err'] = var_4
             
             return df
         else:
@@ -1071,7 +1217,7 @@ class Estimate_FvCB_parameters:
         
         O = 210 #mbar
 #        sco = 3.259
-#        sco = sco.astype(float)        
+        sco = sco.astype(float)        
         gamma_x = 0.5*O/sco
         gm0 = 0
         #Rubisco-limited part;
@@ -1110,7 +1256,7 @@ class Estimate_FvCB_parameters:
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
-        k2LL = df_vcmax['k2LL'].values.astype(float)
+        k2LL = df_vcmax['k2LL'].values.astype(float)*constants.atm/10**5
         ci = df_vcmax['Ci'].values.astype(float)
         i_inc = df_vcmax['Iinc'].values.astype(float)
         O = df_vcmax['O'].values.astype(float)
@@ -1183,7 +1329,7 @@ class Estimate_FvCB_parameters:
         ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
         ax2.plot(i_inc_i,A_i,'ko',label='Expt.',markersize=8)
         ax2.plot(i_inc_i,A_mod_i,'k-',label='Model')
-        ax2.set_xlabel('Irradiance (µmol $mol^{-1}$)',fontsize=20)
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
         ax2.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)    
         ax2.legend(loc='lower right', fontsize='x-large')     
         ax2.xaxis.set_ticks(np.arange(0, 2200, 300))          
@@ -1237,4 +1383,674 @@ class Estimate_FvCB_parameters:
             else:
                 raise ValueError(result.message)
                 return []
-        return vcmax_values        
+        return vcmax_values   
+
+
+
+    def calculate_A_vcmax_jmax(self,xo,rds,thetas,k2LLs,sco):
+        vcmax,TP,R,jmax,gm0 = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,0,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        theta = df_vcmax['Theta'].values.astype(float)
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        ci = df_vcmax['Ci'].values.astype(float)
+        i_inc = df_vcmax['Iinc'].values.astype(float)
+        O = df_vcmax['O'].values.astype(float)
+        
+        O = 210 #mbar
+#        sco = 3.259
+        sco = sco.astype(float)
+        gamma_x = 0.5*O/sco
+#        gm0 = 0
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1.+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4*AAJ*CCJ)**0.5)/(2*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        return A_mod
+    
+    def calculate_A_mod_ave_vcmax_jmax(self,xo,rds,thetas,k2LLs,sco,ci,i_inc):
+        vcmax,TP,R,jmax,gm0 = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,0,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        rd = np.nanmean(rd)
+        
+        theta = df_vcmax['Theta'].values.astype(float)
+        theta = np.nanmean(theta)
+        
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        k2LL = np.nanmean(k2LLs)
+#        
+#        O = df_vcmax['O'].values.astype(float)
+        O = 210 #mbar
+        sco = sco.astype(float)
+        sco = np.nanmean(sco)
+        
+        gamma_x = 0.5*O/sco
+#        gm0 = 0
+#        R = 1;        
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1.+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        return A_mod
+    
+    
+    
+    def plot_A_vcmax_jmax(self,xo,rds,thetas,k2LLs,sco):
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.average_A_CI()
+        A = ACI['Net CO2 assimilation rate'].values 
+        A_err = ACI['Photo_err'].values/2 
+        ci = ACI['Intercellular CO2 concentration'].values
+        i_inc = ACI['Irradiance'].values       
+        A_mod_ci = self.calculate_A_mod_ave_vcmax_jmax(xo,rds,thetas,k2LLs,sco,ci,i_inc)
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.average_A_I()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        A_err_i = AI['Photo_err'].values/2 
+        ci_i = AI['Intercellular CO2 concentration'].values
+        i_inc_i = AI['Irradiance'].values       
+        A_mod_i = self.calculate_A_mod_ave_vcmax_jmax(xo,rds,thetas,k2LLs,sco,ci_i,i_inc_i)
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.errorbar(ci,A,A_err,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,A_mod_ci,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.errorbar(i_inc_i,A_i,A_err_i,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,A_mod_i,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))            
+        plt.show()  
+
+    
+    def model_Vcmax_jmax(self,xo,rds,thetas,k2LLs,sco):
+        A_mod = self.calculate_A_vcmax_jmax(xo,rds,thetas,k2LLs,sco)
+        df_vcmax = self.get_vcmax_data(rds,0,thetas,k2LLs)
+        A = df_vcmax['A'].values        
+        return A - A_mod
+
+
+    def estimate_Vcmax_Jmax(self,inputs):
+        rd = inputs.get('Rd')*-1
+        theta = inputs.get('Theta')
+        k2LL = inputs.get('k2LL')
+        sco = inputs.get('Sco')
+        
+        bnds=((0,0,0,0),(1000,70,20,1000)) 
+        x0 = np.array([200,12,0.5,150,1])        #Vcmax,TP,sigma,Jmax
+    
+        result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[rd,theta,k2LL,sco],method='trf',bounds=bnds)
+        # result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[rd,theta,k2LL,sco],method='lm')
+        
+        res = self.model_Vcmax_jmax(result.x,rd,theta,k2LL,sco)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-5;
+        G = np.linalg.pinv(H)
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_3=2*S*G[2,2]/degfr;
+        var_4=2*S*G[3,3]/degfr;
+        var_5=2*S*G[4,4]/degfr;
+        
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        var_3 = np.sqrt(var_3)
+        var_4 = np.sqrt(var_4)
+        var_5 = np.sqrt(var_5)
+
+        if result.success:
+            self.plot_A_vcmax_jmax(result.x,rd,theta,k2LL,sco)
+            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err','Jmax','Jmax_err','gm0','gm0_err']
+            
+            df=pd.DataFrame([],columns=cols)
+            df.loc[0,'Vcmax'] = result.x[0]
+            df.loc[0,'Tp'] = result.x[1]
+            df.loc[0,'Sigma_gm'] = result.x[2]
+            df.loc[0,'Jmax'] = result.x[3]
+            df.loc[0,'gm0'] = result.x[4]
+            
+            df.loc[0,'Vcmax_err'] = var_1
+            df.loc[0,'Tp_err'] = var_2
+            df.loc[0,'Sigma_gm_err'] = var_3
+            df.loc[0,'Jmax_err'] = var_4
+            df.loc[0,'gm0_err'] = var_5
+            
+            return df
+        else:
+            raise ValueError(result.message)
+            return []  
+
+
+
+
+    def calculate_A_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        vcmax,TP,gm0 = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        jmax = df_vcmax['Jmax'].values.astype(float)
+        theta = df_vcmax['Theta'].values.astype(float)
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        ci = df_vcmax['Ci'].values.astype(float)
+        i_inc = df_vcmax['Iinc'].values.astype(float)
+        O = df_vcmax['O'].values.astype(float)
+        
+#        O = 210 #mbar
+        sco = sco.astype(float)
+        gamma_x = 0.5*O/sco
+        R = 0
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1.+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4*AAJ*CCJ)**0.5)/(2*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        
+        return A_mod
+ 
+
+    def calculate_A_mod_ave_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc):
+        vcmax,TP,gm0 = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        rd = np.nanmean(rd)
+        jmax = df_vcmax['Jmax'].values.astype(float)
+        jmax = np.nanmean(jmax)
+        
+        theta = df_vcmax['Theta'].values.astype(float)
+        theta = np.nanmean(theta)
+        
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        k2LL = np.nanmean(k2LLs)
+#        
+#        O = df_vcmax['O'].values.astype(float)
+        O = 210 #mbar
+        sco = sco.astype(float)
+        sco = np.nanmean(sco)
+        
+        gamma_x = 0.5*O/sco
+        R = 0
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1.+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        
+        gm_mod = ( A_mod + R*(A_mod+rd))/(ci-gamma_x) 
+        # A_mod = np.array([A_mod]).transpose()
+        # A_mod = np.reshape(A_mod,(4,len(ci)))
+        # J = np.array([J]).transpose()
+        # J = np.reshape(J,(4,len(ci)))
+        gm_mod = np.array([gm_mod]).transpose()
+        # gm_mod = np.reshape(gm_mod,(4,len(ci)))
+        return [A_mod,gm_mod,J]
+
+
+    def plot_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.average_A_CI()
+        A = ACI['Net CO2 assimilation rate'].values 
+        ci = ACI['Intercellular CO2 concentration'].values
+        i_inc = ACI['Irradiance'].values   
+        gamma_x = 0.5*210/sco
+        [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
+
+        Rd = np.mean(rds)
+        AA = gamma_x*(J + 8*(A + Rd))
+        gm_ci =  A/(ci-AA/(J-4*(A+Rd)));
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.average_A_I()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        ci_i = AI['Intercellular CO2 concentration'].values
+        i_inc_i = AI['Irradiance'].values       
+        [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
+        AA = gamma_x*(J + 8*(A_i + Rd))
+        gm_i =  A_i/(ci_i-AA/(J-4*(A_i+Rd)));
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.plot(ci,gm_ci_cf,'ko',label='CF.',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,gm_ci,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.plot(i_inc_i,gm_i_cf,'ko',label='CF.',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,gm_i,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))   
+            
+        plt.show()  
+        
+        
+    def plot_A_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.average_A_CI()
+        A = ACI['Net CO2 assimilation rate'].values 
+        A_err = ACI['Photo_err'].values/2 
+        ci = ACI['Intercellular CO2 concentration'].values
+        i_inc = ACI['Irradiance'].values       
+        [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.average_A_I()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        A_err_i = AI['Photo_err'].values/2 
+        ci_i = AI['Intercellular CO2 concentration'].values
+        i_inc_i = AI['Irradiance'].values       
+        [A_mod_i,gm_i,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.errorbar(ci,A,A_err,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,A_mod_ci,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.errorbar(i_inc_i,A_i,A_err_i,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,A_mod_i,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))
+        plt.show()  
+
+    
+    def model_Vcmax_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        A_mod = self.calculate_A_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco)
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        A = df_vcmax['A'].values        
+        return A - A_mod
+    
+    
+    def estimate_Vcmax_constant_gm(self,inputs):
+        rd = inputs.get('Rd')*-1
+        jmax = inputs.get('Jmax')
+        theta = inputs.get('Theta')
+        k2LL = inputs.get('k2LL')
+        sco = inputs.get('Sco')
+        
+        bnds=((0,0,0.1),(1000,70,20)) 
+        x0 = np.array([200,23,1.5])        #Vcmax,TP,sigma,Jmax        
+        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
+#        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
+        
+        res = self.model_Vcmax_const_gm(result.x,rd,jmax,theta,k2LL,sco)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-3;
+        G = np.linalg.pinv(H)
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_3=2*S*G[2,2]/degfr;
+        
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        var_3 = np.sqrt(var_3)
+
+        if result.success:
+            self.plot_A_const_gm(result.x,rd,jmax,theta,k2LL,sco)
+            self.plot_const_gm(result.x,rd,jmax,theta,k2LL,sco)
+            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','gm0','gm0_err']
+            
+            df=pd.DataFrame([],columns=cols)
+            df.loc[0,'Vcmax'] = result.x[0]
+            df.loc[0,'Tp'] = result.x[1]
+            df.loc[0,'gm0'] = result.x[2]
+            
+            df.loc[0,'Vcmax_err'] = var_1
+            df.loc[0,'Tp_err'] = var_2
+            df.loc[0,'gm0_err'] = var_3
+            
+            return df
+        else:
+            raise ValueError(result.message)
+            return []        
+
+
+    def calculate_A_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        vcmax,TP,R = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        jmax = df_vcmax['Jmax'].values.astype(float)
+        theta = df_vcmax['Theta'].values.astype(float)
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        ci = df_vcmax['Ci'].values.astype(float)
+        i_inc = df_vcmax['Iinc'].values.astype(float)
+        O = df_vcmax['O'].values.astype(float)
+#        O = 210 #mbar
+        sco = sco.astype(float)
+        gamma_x = 0.5*O/sco
+        gm0 = 0
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1.+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4*AAJ*CCJ)**0.5)/(2*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        
+        return A_mod
+ 
+
+    def calculate_A_mod_ave_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc):
+        vcmax,TP,R = xo
+        
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        rd = df_vcmax['Rd'].values.astype(float)
+        rd = np.nanmean(rd)
+        jmax = df_vcmax['Jmax'].values.astype(float)
+        jmax = np.nanmean(jmax)
+        
+        theta = df_vcmax['Theta'].values.astype(float)
+        theta = np.nanmean(theta)
+        
+        k2LL = df_vcmax['k2LL'].values.astype(float)
+        k2LL = np.nanmean(k2LLs)
+#        
+#        O = df_vcmax['O'].values.astype(float)
+        O = 210 #mbar
+        sco = sco.astype(float)
+        sco = np.nanmean(sco)
+        
+        gamma_x = 0.5*O/sco
+        gm0 = 0
+        #Rubisco-limited part;
+        kmc = 267
+        kmo = 164
+        kmm = kmc*(1+O/kmo)
+        x1R = vcmax
+        x2R = kmm
+        PR = gm0*(x2R+gamma_x)+(x1R-rd)*R
+        QR = (ci-gamma_x)*x1R-(ci+x2R)*rd
+        AAR = (1+R)*x2R + gamma_x + R*ci
+        BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
+        CCR = PR*QR
+        AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2*AAR)
+        #Electron transport limited part;
+        BB = k2LL*i_inc + jmax;
+        J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
+        x1J = J/4;
+        x2J = 2*gamma_x;
+        PJ = gm0*(x2J+gamma_x)+(x1J-rd)*R;
+        QJ = (ci-gamma_x)*x1J-(ci+x2J)*rd;
+        AAJ = (1.+R)*x2J + gamma_x + R*ci;
+        BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
+        CCJ = PJ*QJ;
+        AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        #TPU limited part;
+        AP = 3*TP-rd;
+        A1 = np.minimum(AR,AJ)
+        A_mod = np.minimum(A1,AP) 
+        
+        gm_mod = ( A_mod + R*(A_mod+rd))/(ci-gamma_x) 
+
+        # A_mod = np.array([A_mod]).transpose()
+        # A_mod = np.reshape(A_mod,(4,len(ci)))
+        # J = np.array([J]).transpose()
+        # J = np.reshape(J,(4,len(ci)))
+        # gm_mod = np.array([gm_mod]).transpose()
+        # gm_mod = np.reshape(gm_mod,(4,len(ci)))
+        
+        return [A_mod,gm_mod,J]
+
+
+    def plot_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.average_A_CI()
+        A = ACI['Net CO2 assimilation rate'].values 
+        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc = ACI['Irradiance'].values   
+        gamma_x = 0.5*210/sco
+        [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
+
+        Rd = np.mean(rds)
+        AA = gamma_x*(J + 8*(A + Rd))
+        gm_ci =  A/(ci-AA/(J-4*(A+Rd)));
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.average_A_I()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc_i = AI['Irradiance'].values       
+        [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
+        AA = gamma_x*(J + 8*(A_i + Rd))
+        gm_i =  A_i/(ci_i-AA/(J-4*(A_i+Rd)));
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.plot(ci,gm_ci,'ko',label='Variable J',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,gm_ci_cf,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.plot(i_inc_i,gm_i,'ko',label='Variable J',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,gm_i_cf,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('$g_m$ (mol $m^{-2}$ $s^{-1}$ $bar^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))   
+            
+        plt.show()  
+        
+        
+    def plot_A_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        plt.rcParams["figure.figsize"] = (15,8) 
+        plt.rcParams.update({'font.size': 12})
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        ACI = self.gas_exch_measurement.average_A_CI()
+        A = ACI['Net CO2 assimilation rate'].values 
+        A_err = ACI['Photo_err'].values/2 
+        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc = ACI['Irradiance'].values       
+        [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
+
+        self.gas_exch_measurement.set_O2(0.21)      
+        AI = self.gas_exch_measurement.average_A_I()
+        A_i = AI['Net CO2 assimilation rate'].values 
+        A_err_i = AI['Photo_err'].values/2 
+        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        i_inc_i = AI['Irradiance'].values       
+        [A_mod_i,gm_i,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
+        
+        fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.errorbar(ci,A,A_err,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax1.plot(ci,A_mod_ci,'k-',label='Model')
+        ax1.set_xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)',fontsize=20)
+        ax1.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax1.xaxis.set_ticks(np.arange(0, 2050, 250))        
+        ax2.errorbar(i_inc_i,A_i,A_err_i,fmt='ko',label='Expt.',mfc='white',mec='black',markersize=8)
+        ax2.plot(i_inc_i,A_mod_i,'k-',label='Model')
+        ax2.set_xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)
+        ax2.set_ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)',fontsize=20)    
+        ax2.legend(loc='lower right', fontsize='x-large')     
+        ax2.xaxis.set_ticks(np.arange(0, 2200, 300))
+        plt.show()  
+
+    
+    def model_Vcmax_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+        A_mod = self.calculate_A_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco)
+        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
+        A = df_vcmax['A'].values        
+        return A - A_mod
+    
+    
+    def estimate_Vcmax_var_gm(self,inputs):
+        rd = inputs.get('Rd')*-1
+        jmax = inputs.get('Jmax')
+        theta = inputs.get('Theta')
+        k2LL = inputs.get('k2LL')
+        sco = inputs.get('Sco')
+        
+        bnds=((0,0,0),(1000,70,20)) 
+        x0 = np.array([200,12,0.5])        #Vcmax,TP,sigma        
+        result = optimize.least_squares(self.model_Vcmax_var_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
+        # result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
+        
+        res = self.model_Vcmax_var_gm(result.x,rd,jmax,theta,k2LL,sco)
+        J = np.array(result.jac)
+        S = np.array(res).T.dot(np.array(res))
+        H=2*J.T.dot(J);
+        degfr=len(res)-3;
+        G = np.linalg.pinv(H)
+        var_1=2*S*G[0,0]/degfr;
+        var_2=2*S*G[1,1]/degfr;
+        var_3=2*S*G[2,2]/degfr;
+        
+        var_1 = np.sqrt(var_1)
+        var_2 = np.sqrt(var_2)
+        var_3 = np.sqrt(var_3)
+
+        if result.success:
+            self.plot_A_var_gm(result.x,rd,jmax,theta,k2LL,sco)
+            self.plot_var_gm(result.x,rd,jmax,theta,k2LL,sco)
+            cols = ['Vcmax','Vcmax_err','Tp','Tp_err','Sigma_gm','Sigma_gm_err']
+            
+            df=pd.DataFrame([],columns=cols)
+            df.loc[0,'Vcmax'] = result.x[0]
+            df.loc[0,'Tp'] = result.x[1]
+            df.loc[0,'Sigma_gm'] = result.x[2]
+            
+            df.loc[0,'Vcmax_err'] = var_1
+            df.loc[0,'Tp_err'] = var_2
+            df.loc[0,'Sigma_gm_err'] = var_3
+            
+            return df
+        else:
+            raise ValueError(result.message)
+            return []        
+
+     

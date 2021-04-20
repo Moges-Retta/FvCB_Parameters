@@ -40,10 +40,10 @@ def make_data(response,Oxygen,species_code,treatment,measurement_days):
 def plot_response(treatment,data,measurement_days):
 
     plt.rcParams["figure.figsize"] = (15,12)
-    plt.rcParams.update({'font.size': 16})
+    plt.rcParams.update({'font.size': 14})
     symbols = ['ko','k^','ks','k<','k>']
     if treatment=='CO2':
-            fig, ax = plt.subplots(2,2)
+            fig, ax = plt.subplots(2,2,constrained_layout=True)
             for i in range(0,len(measurement_days)):
                 symbol=symbols[i]
                 ACI = data[i]
@@ -56,18 +56,23 @@ def plot_response(treatment,data,measurement_days):
                 ax[0][0].plot(Ci, A,symbol,fillstyle='none',markersize=8)
                 ax[0][1].plot(Ci, gs,symbol,fillstyle='none',markersize=8)
                 ax[1][0].plot(Ci, PhiPS2,symbol,fillstyle='none',markersize=8)
-                ax[1][1].plot(Ci, CO2R,symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
+                ax[1][1].plot(CO2R,Ci, symbol,label='Day'+str(measurement_days[i]),fillstyle='none',markersize=8)
                 ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
+                ax[0][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
+                
                 ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
+                ax[0][1].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
+                
                 ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
-                ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
+               
+                ax[1][1].set_ylabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
                 ax[1][0].set_xlabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
                 ax[1][1].set_xlabel("External $CO_2$ (µmol $mol^{-1}$)")
 #                ax[1][1].set_ylim(bottom=0.7)
-                ax[1][1].legend(loc='lower right', fontsize='x-large')     
+                ax[1][1].legend(loc='best', fontsize='x-large')     
                 
     else:
-        fig, ax = plt.subplots(2,2)
+        fig, ax = plt.subplots(2,2,constrained_layout=True)
         for i in range(0,len(measurement_days)):
             symbol=symbols[i]
             AI = data[i]
@@ -83,13 +88,12 @@ def plot_response(treatment,data,measurement_days):
             ax[0][0].set_ylabel("Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)")
             ax[0][1].set_ylabel("Stomatal conductance (mol $m^{-2}$ $s^{-1}$)")
             ax[1][0].set_ylabel("\u03A6$_{PSII}$ (-)")
-            ax[1][1].set_ylabel("Ci (µmol $mol^{-1}$)")
+            ax[1][1].set_ylabel("Intercellular $CO_2$ (µmol $mol^{-1}$)")
             ax[1][0].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
             ax[1][1].set_xlabel("Irradiance (µmol $m^{-2}$ $s^{-1}$)")
 #            ax[1][1].set_ylim(bottom=0.7)
 #    ax.tick_params(labelsize='medium', width=5)
-            ax[1][1].legend(loc='lower right', fontsize='x-large')     
-    
+            ax[1][1].legend(loc='best', fontsize='x-large')     
     
 
 #FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
@@ -173,6 +177,7 @@ Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
 #
 A_I_BN_LL = make_data('Light',2,'Bn','LL',measurement_days)
 A_CI_BN_LL = make_data('CO2',2,'Bn','LL',measurement_days)
+
 #plot_response('Light',A_I_BN_LL,measurement_days)
 #plot_response('CO2',A_CI_BN_LL,measurement_days)
 df_I=replicates_to_Excel(A_I_BN_LL,'B.Nigra',0.02,'A-I curve','LL')
