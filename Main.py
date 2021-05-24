@@ -426,6 +426,9 @@ Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 
+
+
+
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
         
@@ -458,7 +461,19 @@ inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
 vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
 Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
 Vcmax_values=Vcmax_values.append(Vcmaxs)
- 
+
+# NRH procedure, input Rd,phi2ll,lump: estimates: vcmax, Jmax, Tp, sigma
+gm = parameters.NRH_A_gm(Rd)
+
+inputs = {'s':gm.loc['lump','estimate'],'PHI2LL':phi2LL[0][0]}
+Jmax  = parameters.estimate_Jmax(inputs)
+
+inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','estimate']]*4,
+          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
+
+vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
+
+
 df_params.loc[0,'Rd']=Rd
 df_params.loc[0,'Rd_err']=Rd_err
 df_params.loc[0,'k2LL']=s*phi2LL[0][0]
@@ -535,6 +550,15 @@ vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
 Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
 Vcmax_values=Vcmax_values.append(Vcmaxs)
 
+# NRH procedure, input Rd,phi2ll,lump: estimates: vcmax, Jmax, Tp, sigma
+gm = parameters.NRH_A_gm(Rd)
+
+inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','estimate']]*4,
+          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
+
+vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
+
+
 df_params.loc[1,'Rd']=Rd
 df_params.loc[1,'Rd_err']=Rd_err
 df_params.loc[1,'k2LL']=s*phi2LL[0][0]
@@ -610,6 +634,14 @@ vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
 Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
 Vcmax_values=Vcmax_values.append(Vcmaxs)
 
+# NRH procedure, input Rd,phi2ll,lump: estimates: vcmax, Jmax, Tp, sigma
+gm = parameters.NRH_A_gm(Rd)
+
+inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','estimate']]*4,
+          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
+
+vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
+
 
 df_params.loc[2,'Rd']=Rd
 df_params.loc[2,'Rd_err']=Rd_err
@@ -684,6 +716,14 @@ inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
 vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
 Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
 Vcmax_values=Vcmax_values.append(Vcmaxs)
+
+# NRH procedure, input Rd,phi2ll,lump: estimates: vcmax, Jmax, Tp, sigma
+gm = parameters.NRH_A_gm(Rd)
+
+inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','estimate']]*4,
+          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
+
+vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
 #parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
 

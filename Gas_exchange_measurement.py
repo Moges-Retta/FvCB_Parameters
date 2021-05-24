@@ -249,7 +249,7 @@ class Gas_exchange_measurement:
         
         plants = ['H.Incana','B.Nigra']
         count = 0
-        symbol=['ko','k<']
+        symbol=['ko','ks']
         for plant in plants:                
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='HL']
@@ -341,7 +341,7 @@ class Gas_exchange_measurement:
         plt.rcParams["figure.figsize"] = (30,10)
         plants = ['H.Incana','B.Nigra']
         count = 0
-        symbol=['ko','k<']
+        symbol=['ko','ks']
         for plant in plants:                
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='HL']
@@ -353,7 +353,7 @@ class Gas_exchange_measurement:
             AHL_CI = A_CI_d['gs'].values
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev gs'].values
-            ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],markersize=8)
+            ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_CI = self.t_test_A_CI('HL') 
             stat_HL_CI = stat_HL_CI['p_gs'].values
 
@@ -363,7 +363,7 @@ class Gas_exchange_measurement:
             AHL_I = A_I_d['gs'].values
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev gs'].values
-            ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],markersize=8)
+            ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_I = self.t_test_A_I('HL')
             stat_HL_I = stat_HL_I['p_gs'].values
             
@@ -379,7 +379,7 @@ class Gas_exchange_measurement:
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev gs'].values
             
-            ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],markersize=8)
+            ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_LL_CI = self.t_test_A_CI('LL')
             stat_LL_CI = stat_LL_CI['p_gs'].values
 
@@ -393,7 +393,7 @@ class Gas_exchange_measurement:
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev gs'].values
             
-            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,markersize=8)
+            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,mfc='white',mec='black',markersize=8)
             stat_LL_I = self.t_test_A_I('LL')
             stat_LL_I = stat_LL_I['p_gs'].values
             if plant == 'H.Incana':
@@ -428,7 +428,7 @@ class Gas_exchange_measurement:
         plt.rcParams["figure.figsize"] = (10,10)
         plants = ['H.Incana','B.Nigra']
         count = 0
-        symbol=['ko','k<']
+        symbol=['ko','ks']
         for plant in plants:                
             A_CI_d = df[df['Species']==plant]
             A_CI_d = A_CI_d[A_CI_d['Treatment']=='HL']
@@ -440,7 +440,7 @@ class Gas_exchange_measurement:
             AHL_CI = A_CI_d['PhiPS2'].values
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev PhiPS2'].values
-            ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],markersize=8)
+            ax[0][0].errorbar(Ci,AHL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_CI = self.t_test_A_CI('HL') 
             stat_HL_CI = stat_HL_CI['p_phi'].values
 
@@ -450,7 +450,7 @@ class Gas_exchange_measurement:
             AHL_I = A_I_d['PhiPS2'].values
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev PhiPS2'].values
-            ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],markersize=8)
+            ax[1][0].errorbar(Iinc,AHL_I,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_HL_I = self.t_test_A_I('HL')
             stat_HL_I = stat_HL_I['p_phi'].values
             
@@ -466,7 +466,7 @@ class Gas_exchange_measurement:
             Ci = A_CI_d['Ci'].values
             err = A_CI_d['Std.dev PhiPS2'].values
             
-            ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],markersize=8)
+            ax[0][1].errorbar(Ci,ALL_CI,err,fmt=symbol[count],mfc='white',mec='black',markersize=8)
             stat_LL_CI = self.t_test_A_CI('LL')
             stat_LL_CI = stat_LL_CI['p_phi'].values
             if plant == 'H.Incana':
@@ -479,7 +479,7 @@ class Gas_exchange_measurement:
             Iinc = A_I_d['Iinc'].values
             err = A_I_d['Std.dev PhiPS2'].values
             
-            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],label=plant,markersize=8)
+            ax[1][1].errorbar(Iinc, ALL_I,err,fmt=symbol[count],mfc='white',mec='black',label=plant,markersize=8)
             stat_LL_I = self.t_test_A_I('LL')
             stat_LL_I = stat_LL_I['p_phi'].values
             if plant == 'H.Incana':

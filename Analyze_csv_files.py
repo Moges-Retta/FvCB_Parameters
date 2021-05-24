@@ -7,8 +7,9 @@ Created on Mon Mar  8 13:04:47 2021
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from math import sqrt
 
-FORMAT = ['Photo','Cond','Ci',"CO2R",'CO2S','PhiPS2','CO2S','PARi','Trmmol','BLCond']
+FORMAT = ['Photo','Cond','Ci',"CO2R",'CO2S','PhiPS2','CO2S','PARi','Trmmol','BLCond','VpdL']
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -99,7 +100,7 @@ def plot_response(treatment,data,measurement_days):
 #FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
 
 def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
-    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond']
+    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
     Gas_Exchange_data = pd.DataFrame([],columns=columns )
     for i in range(0,len(data_frame)):
         AI = data_frame[i]
@@ -112,7 +113,7 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         
         Trmmol = AI['Trmmol'].values
         BLCond = AI['BLCond'].values
-        
+        vpdL = AI['VpdL'].values
         PhiPS2 = AI['PhiPS2'].values
         df1 = pd.DataFrame([],columns=columns )
         df1['Replicate'] = [i+1]*len(data_frame[i])
@@ -129,11 +130,12 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         df1['CO2R'] = CO2R[:]        
         df1['Trmmol'] = Trmmol[:]
         df1['BLCond'] = BLCond[:]
+        df1['VpdL'] = vpdL[:]
         
         Gas_Exchange_data=Gas_Exchange_data.append(df1)
     return Gas_Exchange_data
   
-columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond']
+columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL
@@ -376,5 +378,36 @@ df_I=replicates_to_Excel(A_I_Hi_HL,'H.Incana',0.02,'A-I curve','HL')
 df_CI=replicates_to_Excel(A_CI_Hi_HL,'H.Incana',0.02,'A-CI curve','HL')
 Gas_Exchange_data=Gas_Exchange_data.append(df_I)
 Gas_Exchange_data=Gas_Exchange_data.append(df_CI)
+
+#vpdL
+vpdL = Gas_Exchange_data['VpdL'].values
+vpdL_m = vpdL.mean(axis=0)
+vpdL_e = vpdL.std(axis=0)
+
+vpdL_Bn = Gas_Exchange_data[Gas_Exchange_data['Species']=='B.Nigra']
+vpdL_Bn_LL = vpdL_Bn[vpdL_Bn['Treatment']=='LL']
+vpdL_Bn_HL = vpdL_Bn[vpdL_Bn['Treatment']=='HL']
+
+vpdL_Bn_LL=vpdL_Bn_LL['VpdL'].values
+vpdL_Bn_HL=vpdL_Bn_HL['VpdL'].values
+
+vpdL_Bn_LL_m = vpdL_Bn_LL.mean(axis=0)
+vpdL_Bn_LL_e = vpdL_Bn_LL.std(axis=0)
+vpdL_Bn_HL_m = vpdL_Bn_HL.mean(axis=0)
+vpdL_Bn_HL_e = vpdL_Bn_HL.std(axis=0)
+
+vpdL_Hi = Gas_Exchange_data[Gas_Exchange_data['Species']=='H.Incana']
+vpdL_Hi_LL = vpdL_Hi[vpdL_Hi['Treatment']=='LL']
+vpdL_Hi_HL = vpdL_Hi[vpdL_Hi['Treatment']=='HL']
+
+vpdL_Hi_LL=vpdL_Hi_LL['VpdL'].values
+vpdL_Hi_HL=vpdL_Hi_HL['VpdL'].values
+
+vpdL_Hi_LL_m = vpdL_Hi_LL.mean(axis=0)
+vpdL_Hi_LL_e = vpdL_Hi_LL.std(axis=0)
+vpdL_Hi_HL_m = vpdL_Hi_HL.mean(axis=0)
+vpdL_Hi_HL_e = vpdL_Hi_HL.std(axis=0)
+
+
 #
 #Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
