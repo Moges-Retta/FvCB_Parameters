@@ -15,6 +15,11 @@ species_code = ['Hi','Bn']
 treatment =['HL','LL']
 
 def make_data(response,Oxygen,species_code,treatment,measurement_days):
+    """
+        Extract A-CI or A-I curve for a given species, treatment and  
+        measurement (light or CO2 response, 2 or 21 % O2)
+    """
+        
     all_data=[]
     for day in measurement_days:
         file_name = 'HL-LL_Day'+str(day)+'_'+species_code+'_'+treatment+'.csv'

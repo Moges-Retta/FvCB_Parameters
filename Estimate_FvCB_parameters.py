@@ -293,7 +293,7 @@ class Estimate_FvCB_parameters:
     def model_individual_Jmax(self,params,s,PHI2LL,Iinc,phiPS2): 
         
         """
-        Estimate Jmax, curvature factor (theta) and quantum efficiency of PSII
+        Estimate Jmax, convexity factor (theta) and quantum efficiency of PSII
         e flow at strictly limiting light level (Phi2LL)
         """
         Jmax,theta = params
@@ -418,8 +418,8 @@ class Estimate_FvCB_parameters:
     def model_Jmax(self,params,s,PHI2LL): 
         
         """
-        Estimate Jmax, curvature factor (theta) and quantum efficiency of PSII
-        e flow at strictly limiting light level (Phi2LL)
+        Estimate Jmax and curvature factor (theta) using data for quantum efficiency of PSII
+        e flow (PhiPS2)
         """
         AI = self.gas_exch_measurement.get_AI_data()
         Jmax,theta = params
@@ -643,6 +643,13 @@ class Estimate_FvCB_parameters:
         return df
     
     def estimate_bH_bL(self,Rd_values):
+        
+        """
+        Estimate initial carboxylation efficiency at 21 % O2 (bH) 
+        and 2 % O2 (bL) as slope of initial part of A-CI (50<=CO2<=150).
+        
+        """
+        
         data = self.get_Sco_data(Rd_values)
         CiH = data['CiH'].values*constants.atm/10**5
         AH = data['AH'].values   
