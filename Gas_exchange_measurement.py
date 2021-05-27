@@ -58,6 +58,64 @@ class Gas_exchange_measurement:
     def get_treatment(self):
         return self.treatment
 
+    def make_avareage_data(self):
+        columns = ['Species','Treatment','Response','Ci','A','Iinc','PhiPS2','Std.dev A','gs','Std.dev gs','Std.dev PhiPS2']
+        species = ['B.Nigra','H.Incana']
+        treatments = ['HL','LL']
+        ave_gas_Exchange_data = pd.DataFrame([])
+        df = pd.DataFrame([],columns=columns )
+        O = 0.21
+        
+        # Make average data of ACI and AI
+        for plant in species:
+                for treatment in treatments:
+                    gas_exch_measurement = Gas_exchange_measurement(O,plant,treatment)
+                    df_ave = gas_exch_measurement.average_A_CI()
+                    
+                    I_ave_ci = df_ave['Irradiance'].values
+                    Ci_ave_ci = df_ave['Intercellular_CO2_concentration'].values
+                    A_ave_ci = df_ave['Net_CO2_assimilation_rate'].values
+                    gs_ave_ci = df_ave['Stomatal_conductance_for_CO2'].values
+                    phiPS2 = df_ave['PhiPS2'].values
+                    A_std = df_ave['Photo_err'].values
+                    gs_std = df_ave['gs_err'].values
+                    phiPS2_std = df_ave['PhiPS2_err'].values
+                    
+                    df = pd.DataFrame([],columns=columns )            
+                    df['Ci']=Ci_ave_ci; df['A']=A_ave_ci; df['Iinc']=I_ave_ci; 
+                    df['Std.dev A']=A_std; df['gs']=gs_ave_ci;df['PhiPS2']=phiPS2;df['Std.dev PhiPS2']=phiPS2_std;
+                    df['Std.dev gs']=gs_std;df['Species']=plant; df['Treatment']=treatment; df['Response']='ACI'; 
+                    ave_gas_Exchange_data=ave_gas_Exchange_data.append(df)
+                    
+                    df_ave  = gas_exch_measurement.average_A_I() 
+                    I_ave_i = df_ave['Irradiance'].values
+                    Ci_ave_i = df_ave['Intercellular_CO2_concentration'].values
+                    A_ave_i = df_ave['Net_CO2_assimilation_rate'].values
+                    gs_ave_i = df_ave['Stomatal_conductance_for_CO2'].values
+                    phiPS2 = df_ave['PhiPS2'].values
+                    A_std = df_ave['Photo_err'].values
+                    gs_std = df_ave['gs_err'].values
+                    phiPS2_std = df_ave['PhiPS2_err'].values
+                    
+                    
+                    df = pd.DataFrame([],columns=columns )
+                    df['Ci']=Ci_ave_i; df['A']=A_ave_i; df['Iinc']=I_ave_i; 
+                    df['Std.dev A']=A_std; df['gs']=gs_ave_i;df['PhiPS2']=phiPS2;df['Std.dev PhiPS2']=phiPS2_std;
+                    df['Std.dev gs']=gs_std;df['Species']=plant; df['Treatment']=treatment; df['Response']='AI'; 
+                    ave_gas_Exchange_data=ave_gas_Exchange_data.append(df)
+        return ave_gas_Exchange_data
+                
+    ##ave_gas_Exchange_data.to_excel(PATH + 'Ave_Gas_Exchange_data_corr.xlsx', index = False)
+
+
+    def get_average_values(self,curve):
+        if curve == 'ACI':
+            df_ave = self.average_A_CI()    
+        else :
+            df_ave = self.average_A_I()    
+        
+        return df_ave
+
 
     def plot_A_CI(self):
         A_CI_d = self.A_CI[self.A_CI['Oxygen_level']==self.get_O2()]
@@ -188,29 +246,45 @@ class Gas_exchange_measurement:
         df_ave = df_ave.sort_values(by=['Irradiance'])            
         return df_ave
         
-    def plot_ave_A_CI(self,x1,y1,yerr):
-        plt.errorbar(x1,y1,yerr,fmt='o')
+    def plot_ave_A_CI(self,df_ave):
+        
+        Ci_ave_ci = df_ave['Intercellular_CO2_concentration'].values
+        A_ave_ci = df_ave['Net_CO2_assimilation_rate'].values
+        A_std = df_ave['Photo_err'].values
+        plt.errorbar(Ci_ave_ci,A_ave_ci,A_std,fmt='o')
         plt.xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)')
         plt.ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
         plt.show()
 
 
-    def plot_ave_A_I(self,x1,y1,yerr):
-        plt.errorbar(x1,y1,yerr,fmt='o')
+    def plot_ave_A_I(self,df_ave):
+        I_ave = df_ave['Irradiance'].values
+        A_ave = df_ave['Net_CO2_assimilation_rate'].values
+        A_std = df_ave['Photo_err'].values
+
+        plt.errorbar(I_ave,A_ave,A_std,fmt='o')
         plt.xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)')
         plt.ylabel('Net photosynthesis (µmol $m^{-2}$ $s^{-1}$)')
         plt.show()
 
 
-    def plot_ave_gs_I(self,x1,y1,yerr):
-        plt.errorbar(x1,y1,yerr,fmt='o')
+    def plot_ave_gs_I(self,df_ave):
+        gs_ave = df_ave['Stomatal_conductance_for_CO2'].values
+        gs_std = df_ave['gs_err'].values
+        I_ave = df_ave['Irradiance'].values
+
+        plt.errorbar(I_ave,gs_ave,gs_std,fmt='o')
         plt.xlabel('Irradiance (µmol $m^{-2}$ $s^{-1}$)')
         plt.ylabel('Stomatal conductance (mol $m^{-2}$ $s^{-1}$)')
         plt.show()        
 
 
-    def plot_ave_gs_CI(self,x1,y1,yerr):
-        plt.errorbar(x1,y1,yerr,fmt='o')
+    def plot_ave_gs_CI(self,df_ave):
+        gs_ave = df_ave['Stomatal_conductance_for_CO2'].values
+        gs_std = df_ave['gs_err'].values
+        Ci_ave_ci = df_ave['Intercellular_CO2_concentration'].values
+
+        plt.errorbar(Ci_ave_ci,gs_ave,gs_std,fmt='o')
         plt.xlabel('Intercellular $CO_2$ (µmol $mol^{-1}$)')
         plt.ylabel('Stomatal conductance (mol $m^{-2}$ $s^{-1}$)')
         plt.show()
