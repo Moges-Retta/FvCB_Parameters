@@ -18,10 +18,10 @@ class Gas_exchange_measurement:
 #    FORMAT = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', 'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2S','Trmmol','BLCond']
     FORMAT = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', 'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2R']
     df_selected = data[FORMAT]
-    A_CI = df_selected[df_selected['Measurement_type']=='A-CI curve']
-    A_I= df_selected[df_selected['Measurement_type']=='A-I curve']
-    gs_CI= df_selected[df_selected['Measurement_type']=='A-CI curve']
-    gs_I= df_selected[df_selected['Measurement_type']=='A-I curve']
+    A_CI = df_selected[df_selected['Measurement_type']=='A_CI_curve']
+    A_I= df_selected[df_selected['Measurement_type']=='A_I_curve']
+    gs_CI= df_selected[df_selected['Measurement_type']=='A_CI_curve']
+    gs_I= df_selected[df_selected['Measurement_type']=='A_I_curve']
 
     def __init__(self,O2,species,treatment):
             self.O2=O2

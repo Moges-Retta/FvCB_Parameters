@@ -68,9 +68,9 @@ def get_average_values(gas_exch_measurement,curve):
         df_ave = gas_exch_measurement.average_A_I()    
         
     I_ave_ci = df_ave['Irradiance'].values
-    Ci_ave_ci = df_ave['Intercellular_ CO2_concentration'].values
+    Ci_ave_ci = df_ave['Intercellular_CO2_concentration'].values
     A_ave_ci = df_ave['Net_CO2_assimilation_rate'].values
-    gs_ave_ci = df_ave['Stomata _conductance_for_CO2'].values
+    gs_ave_ci = df_ave['Stomatal_conductance_for_CO2'].values
     phiPS2 = df_ave['PhiPS2'].values
     A_std = df_ave['Photo_err'].values
     gs_std = df_ave['gs_err'].values
