@@ -15,13 +15,13 @@ PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
 class Gas_exchange_measurement:
     data = pd.read_excel ('Gas_Exchange_data.xlsx') 
-#    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','Trmmol','BLCond']
-    FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2','CO2R']
+#    FORMAT = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', 'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2S','Trmmol','BLCond']
+    FORMAT = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', 'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2R']
     df_selected = data[FORMAT]
-    A_CI = df_selected[df_selected['Measurement type']=='A-CI curve']
-    A_I= df_selected[df_selected['Measurement type']=='A-I curve']
-    gs_CI= df_selected[df_selected['Measurement type']=='A-CI curve']
-    gs_I= df_selected[df_selected['Measurement type']=='A-I curve']
+    A_CI = df_selected[df_selected['Measurement_type']=='A-CI curve']
+    A_I= df_selected[df_selected['Measurement_type']=='A-I curve']
+    gs_CI= df_selected[df_selected['Measurement_type']=='A-CI curve']
+    gs_I= df_selected[df_selected['Measurement_type']=='A-I curve']
 
     def __init__(self,O2,species,treatment):
             self.O2=O2
@@ -62,22 +62,22 @@ class Gas_exchange_measurement:
 
 
     def plot_A_CI(self):
-        A_CI_d = self.A_CI[self.A_CI['Oxygen level']==self.get_O2()]
+        A_CI_d = self.A_CI[self.A_CI['Oxygen_level']==self.get_O2()]
         A_CI_d = A_CI_d[A_CI_d['Species']==self.get_species()]
         A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
         replicates = A_CI_d['Replicate'].values
         replicates=np.unique(replicates)
         for replicate in replicates:
             A_CI_r= A_CI_d[A_CI_d['Replicate']==replicate]
-            Ci = A_CI_r['Intercellular CO2 concentration'].values
-            A = A_CI_r['Net CO2 assimilation rate'].values
+            Ci = A_CI_r['Intercellular_CO2_concentration'].values
+            A = A_CI_r['Net_CO2_assimilation_rate'].values
             plt.plot(Ci,A,'o')
             plt.title("A-CI")
         plt.show()
 
 
     def get_AI_data(self):
-        A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
+        A_I_d  = self.A_I[self.A_I['Oxygen_level']==self.get_O2()]
         A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]
         A_I_d = A_I_d[A_I_d['Treatment']==self.get_treatment()]
         return A_I_d
@@ -85,14 +85,14 @@ class Gas_exchange_measurement:
 
     def get_ACI_data(self):
         A_CI = self.get_A_Ci()
-        A_CI_d  = A_CI[A_CI['Oxygen level']==self.get_O2()]
+        A_CI_d  = A_CI[A_CI['Oxygen_level']==self.get_O2()]
         A_CI_d =  A_CI_d[A_CI_d['Species']==self.get_species()]
         A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
         return A_CI_d
 
             
     def plot_A_I(self):
-        A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
+        A_I_d  = self.A_I[self.A_I['Oxygen_level']==self.get_O2()]
         A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]
         A_I_d = A_I_d[A_I_d['Treatment']==self.get_treatment()]
         replicates = A_I_d['Replicate'].values
@@ -100,20 +100,20 @@ class Gas_exchange_measurement:
         for replicate in replicates:
             A_I_r= A_I_d[A_I_d['Replicate']==replicate]
             I = A_I_r['Irradiance'].values
-            A = A_I_r['Net CO2 assimilation rate'].values
+            A = A_I_r['Net_CO2_assimilation_rate'].values
             plt.plot(I,A,'o')
             plt.title("A-I")
         plt.show()
 
 
     def average_A_CI(self):
-        A_CI_d = self.A_CI[self.A_CI['Oxygen level']==self.get_O2()]
+        A_CI_d = self.A_CI[self.A_CI['Oxygen_level']==self.get_O2()]
         A_CI_d = A_CI_d[A_CI_d['Species']==self.get_species()]
         A_CI_d = A_CI_d[A_CI_d['Treatment']==self.get_treatment()]
         replicates = A_CI_d['Replicate'].unique()
 
-        cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
-                'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
+        cols = ['Irradiance','Intercellular_CO2_concentration','Net_CO2_assimilation_rate',\
+                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
         df_ci = pd.DataFrame([])
         df_A = pd.DataFrame([])
@@ -124,10 +124,10 @@ class Gas_exchange_measurement:
 
         for replicate in replicates:
             A_CI_r= A_CI_d[A_CI_d['Replicate']==replicate]
-            Ci = A_CI_r['Intercellular CO2 concentration'].values
-            A = A_CI_r['Net CO2 assimilation rate'].values
+            Ci = A_CI_r['Intercellular_CO2_concentration'].values
+            A = A_CI_r['Net_CO2_assimilation_rate'].values
             I = A_CI_r['Irradiance'].values
-            gs = A_CI_r['Stomatal conductance for CO2'].values
+            gs = A_CI_r['Stomatal_conductance_for_CO2'].values
             PhiPS2 = A_CI_r['PhiPS2'].values
             
             df_ci.loc[:,count] = Ci
@@ -139,18 +139,18 @@ class Gas_exchange_measurement:
             count+=1
         
         df_ave.loc[:,'Irradiance'] = np.nanmean(df_I,axis=1)
-        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(df_ci,axis=1)
-        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(df_A,axis=1)
-        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(df_gs,axis=1)
+        df_ave.loc[:,'Intercellular_CO2_concentration'] = np.nanmean(df_ci,axis=1)
+        df_ave.loc[:,'Net_CO2_assimilation_rate'] = np.nanmean(df_A,axis=1)
+        df_ave.loc[:,'Stomatal_conductance_for_CO2'] = np.nanmean(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
         df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
         df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)
-        df_ave = df_ave.sort_values(by=['Intercellular CO2 concentration'])
+        df_ave = df_ave.sort_values(by=['Intercellular_CO2_concentration'])
         return df_ave
     
     def average_A_I(self):
-        A_I_d  = self.A_I[self.A_I['Oxygen level']==self.get_O2()]
+        A_I_d  = self.A_I[self.A_I['Oxygen_level']==self.get_O2()]
         A_I_d =  A_I_d[A_I_d['Species']==self.get_species()]
         A_I_d = A_I_d[A_I_d['Treatment']==self.get_treatment()]
         replicates = A_I_d['Replicate'].unique()
@@ -161,16 +161,16 @@ class Gas_exchange_measurement:
         df_gs = pd.DataFrame([])
         df_phi = pd.DataFrame([])
         count = 0
-        cols = ['Irradiance','Intercellular CO2 concentration','Net CO2 assimilation rate',\
-                'PhiPS2','Stomatal conductance for CO2','Photo_err','gs_err','PhiPS2_err']
+        cols = ['Irradiance','Intercellular_CO2_concentration','Net_CO2_assimilation_rate',\
+                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
         
         for replicate in replicates:
             A_I_r= A_I_d[A_I_d['Replicate']==replicate]
             I = A_I_r['Irradiance'].values
-            A = A_I_r['Net CO2 assimilation rate'].values
-            Ci = A_I_r['Intercellular CO2 concentration'].values
-            gs = A_I_r['Stomatal conductance for CO2'].values
+            A = A_I_r['Net_CO2_assimilation_rate'].values
+            Ci = A_I_r['Intercellular_CO2_concentration'].values
+            gs = A_I_r['Stomatal_conductance_for_CO2'].values
             PhiPS2 = A_I_r['PhiPS2'].values
             df_ci.loc[:,count] = Ci
             df_A.loc[:,count] = A
@@ -180,9 +180,9 @@ class Gas_exchange_measurement:
             count+=1
             
         df_ave.loc[:,'Irradiance'] = np.nanmean(df_I,axis=1)
-        df_ave.loc[:,'Intercellular CO2 concentration'] = np.nanmean(df_ci,axis=1)
-        df_ave.loc[:,'Net CO2 assimilation rate'] = np.nanmean(df_A,axis=1)
-        df_ave.loc[:,'Stomatal conductance for CO2'] = np.nanmean(df_gs,axis=1)
+        df_ave.loc[:,'Intercellular_CO2_concentration'] = np.nanmean(df_ci,axis=1)
+        df_ave.loc[:,'Net_CO2_assimilation_rate'] = np.nanmean(df_A,axis=1)
+        df_ave.loc[:,'Stomatal_conductance_for_CO2'] = np.nanmean(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
         df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
         df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
@@ -511,11 +511,11 @@ class Gas_exchange_measurement:
         
     def t_test_A_I(self,treatment):
         A_I_d_BN  = self.A_I[self.A_I['Species']=='B.Nigra']
-        A_I_d_BN  = A_I_d_BN[A_I_d_BN['Oxygen level']==self.get_O2()]
+        A_I_d_BN  = A_I_d_BN[A_I_d_BN['Oxygen_level']==self.get_O2()]
         A_I_d_BN = A_I_d_BN[A_I_d_BN['Treatment']==treatment]
         
         A_I_d_Hi  = self.A_I[self.A_I['Species']=='H.Incana']        
-        A_I_d_Hi  = A_I_d_Hi[A_I_d_Hi['Oxygen level']==self.get_O2()]
+        A_I_d_Hi  = A_I_d_Hi[A_I_d_Hi['Oxygen_level']==self.get_O2()]
         A_I_d_Hi = A_I_d_Hi[A_I_d_Hi['Treatment']==treatment]
         p_values = []
         par_values = [100,120,150,180,200,250,300,400,550,800,1100,1500,1800,2200]*4
@@ -529,13 +529,13 @@ class Gas_exchange_measurement:
         for Par in PARi:
             A_I_r_BN= A_I_d_BN[A_I_d_BN['Irradiance']==Par]
             A_I_r_Hi= A_I_d_Hi[A_I_d_Hi['Irradiance']==Par]
-            AHi = A_I_r_Hi['Net CO2 assimilation rate'].values
-            ABN = A_I_r_BN['Net CO2 assimilation rate'].values
+            AHi = A_I_r_Hi['Net_CO2_assimilation_rate'].values
+            ABN = A_I_r_BN['Net_CO2_assimilation_rate'].values
             [t,p]= stats.ttest_ind(AHi,ABN, equal_var = False)
             p_values.loc[count,'p_A']=p
            
-            gsHi = A_I_r_Hi['Stomatal conductance for CO2'].values
-            gsBN = A_I_r_BN['Stomatal conductance for CO2'].values
+            gsHi = A_I_r_Hi['Stomatal_conductance_for_CO2'].values
+            gsBN = A_I_r_BN['Stomatal_conductance_for_CO2'].values
             [t,p]= stats.ttest_ind(gsHi,gsBN, equal_var = False)
             p_values.loc[count,'p_gs']=p            
             
@@ -548,11 +548,11 @@ class Gas_exchange_measurement:
              
     def t_test_A_CI(self,treatment):
         A_CI_d_BN  = self.A_CI[self.A_CI['Species']=='B.Nigra']
-        A_CI_d_BN  = A_CI_d_BN[A_CI_d_BN['Oxygen level']==self.get_O2()]
+        A_CI_d_BN  = A_CI_d_BN[A_CI_d_BN['Oxygen_level']==self.get_O2()]
         A_CI_d_BN = A_CI_d_BN[A_CI_d_BN['Treatment']==treatment]
         
         A_CI_d_Hi  = self.A_CI[self.A_CI['Species']=='H.Incana']        
-        A_CI_d_Hi  = A_CI_d_Hi[A_CI_d_Hi['Oxygen level']==self.get_O2()]
+        A_CI_d_Hi  = A_CI_d_Hi[A_CI_d_Hi['Oxygen_level']==self.get_O2()]
         A_CI_d_Hi = A_CI_d_Hi[A_CI_d_Hi['Treatment']==treatment]
 
         par_values = [400,300,250,200,150,100,500,600,700,850,1000,1200,1500,1800,2200]*4
@@ -566,12 +566,12 @@ class Gas_exchange_measurement:
         for Par in PARi:
             A_CI_r_BN= A_CI_d_BN[A_CI_d_BN['Irradiance']==Par]
             A_CI_r_Hi= A_CI_d_Hi[A_CI_d_Hi['Irradiance']==Par]
-            AHi = A_CI_r_Hi['Net CO2 assimilation rate'].values
-            ABN = A_CI_r_BN['Net CO2 assimilation rate'].values
+            AHi = A_CI_r_Hi['Net_CO2_assimilation_rate'].values
+            ABN = A_CI_r_BN['Net_CO2_assimilation_rate'].values
             [t,p]= stats.ttest_ind(AHi,ABN, equal_var = False)
             p_values.loc[count,'p_A']=p
-            gsHi = A_CI_r_Hi['Stomatal conductance for CO2'].values
-            gsBN = A_CI_r_BN['Stomatal conductance for CO2'].values
+            gsHi = A_CI_r_Hi['Stomatal_conductance_for_CO2'].values
+            gsBN = A_CI_r_BN['Stomatal_conductance_for_CO2'].values
             [t,p]= stats.ttest_ind(gsHi,gsBN, equal_var = False)
             p_values.loc[count,'p_gs']=p            
             phi_Hi = A_CI_r_Hi['PhiPS2'].values
@@ -591,17 +591,17 @@ class Gas_exchange_measurement:
         3. recalculate gbc and Ci and photo  
         """
         columns = ['Replicate','Species','Treatment','Measurement type',\
-                   'Oxygen level','Net CO2 assimilation rate',\
-                   'Intercellular CO2 concentration','PhiPS2','Irradiance',\
-                   'Stomatal conductance for CO2','CO2R','CO2S','H2OR','H2OS',\
+                   'Oxygen_level','Net_CO2_assimilation_rate',\
+                   'Intercellular_CO2_concentration','PhiPS2','Irradiance',\
+                   'Stomatal_conductance_for_CO2','CO2R','CO2S','H2OR','H2OS',\
                    'Flow','Area','Trmmol','BLCond']
         Gas_Exchange_data_corr = pd.DataFrame([],columns=columns )
         ACI_corr = self.A_CI;
         AI_corr = self.A_I;
-        cond = ACI_corr['Stomatal conductance for CO2'].values
+        cond = ACI_corr['Stomatal_conductance_for_CO2'].values
         blcond = ACI_corr['BLCond'].values
         trmmol = ACI_corr['Trmmol'].values        
-#        photo = ACI_corr['Net CO2 assimilation rate'].values
+#        photo = ACI_corr['Net_CO2_assimilation_rate'].values
         CO2S = ACI_corr['CO2S'].values
         CO2R = ACI_corr['CO2R'].values
         H2OR = ACI_corr['H2OR'].values
@@ -616,12 +616,12 @@ class Gas_exchange_measurement:
         gbl_corr = 1/(1/cond+1.37/blcond)
         ci_corr = ((gbl_corr-trmmol/1000/2)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/1000/2)
         
-        ACI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
-        ACI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr        
+        ACI_corr.loc[:,['Net_CO2_assimilation_rate']]=photo_corr
+        ACI_corr.loc[:,['Intercellular_CO2_concentration']]=ci_corr        
         
         Gas_Exchange_data_corr= Gas_Exchange_data_corr.append(ACI_corr)
         
-        cond = AI_corr['Stomatal conductance for CO2'].values
+        cond = AI_corr['Stomatal_conductance_for_CO2'].values
         blcond = AI_corr['BLCond'].values
         trmmol = AI_corr['Trmmol'].values        
         CO2S = AI_corr['CO2S'].values
@@ -638,12 +638,12 @@ class Gas_exchange_measurement:
         gbl_corr = 1/(1/cond+1.37/blcond)
         ci_corr = ((gbl_corr-trmmol/1000/2)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/1000/2)
         
-        AI_corr.loc[:,['Net CO2 assimilation rate']]=photo_corr
-        AI_corr.loc[:,['Intercellular CO2 concentration']]=ci_corr     
+        AI_corr.loc[:,['Net_CO2_assimilation_rate']]=photo_corr
+        AI_corr.loc[:,['Intercellular_CO2_concentration']]=ci_corr     
         
         Gas_Exchange_data_corr=Gas_Exchange_data_corr.append(AI_corr)
         
-#        FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate', 'Intercellular CO2 concentration', 'PhiPS2','Irradiance','Stomatal conductance for CO2']
+#        FORMAT = ['Replicate','Species','Treatment','Measurement type','Oxygen_level','Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', 'PhiPS2','Irradiance','Stomatal_conductance_for_CO2']
 #        Gas_Exchange_data_corr = Gas_Exchange_data_corr[FORMAT]
 #        
 #        Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)

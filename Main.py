@@ -28,9 +28,9 @@ for plant in species:
             df_ave = gas_exch_measurement.average_A_CI()
             
             I_ave_ci = df_ave['Irradiance'].values
-            Ci_ave_ci = df_ave['Intercellular CO2 concentration'].values
-            A_ave_ci = df_ave['Net CO2 assimilation rate'].values
-            gs_ave_ci = df_ave['Stomatal conductance for CO2'].values
+            Ci_ave_ci = df_ave['Intercellular_CO2_concentration'].values
+            A_ave_ci = df_ave['Net_CO2_assimilation_rate'].values
+            gs_ave_ci = df_ave['Stomatal_conductance_for_CO2'].values
             phiPS2 = df_ave['PhiPS2'].values
             A_std = df_ave['Photo_err'].values
             gs_std = df_ave['gs_err'].values
@@ -44,9 +44,9 @@ for plant in species:
             
             df_ave  = gas_exch_measurement.average_A_I() 
             I_ave_i = df_ave['Irradiance'].values
-            Ci_ave_i = df_ave['Intercellular CO2 concentration'].values
-            A_ave_i = df_ave['Net CO2 assimilation rate'].values
-            gs_ave_i = df_ave['Stomatal conductance for CO2'].values
+            Ci_ave_i = df_ave['Intercellular_CO2_concentration'].values
+            A_ave_i = df_ave['Net_CO2_assimilation_rate'].values
+            gs_ave_i = df_ave['Stomatal_conductance_for_CO2'].values
             phiPS2 = df_ave['PhiPS2'].values
             A_std = df_ave['Photo_err'].values
             gs_std = df_ave['gs_err'].values
@@ -68,9 +68,9 @@ def get_average_values(gas_exch_measurement,curve):
         df_ave = gas_exch_measurement.average_A_I()    
         
     I_ave_ci = df_ave['Irradiance'].values
-    Ci_ave_ci = df_ave['Intercellular CO2 concentration'].values
-    A_ave_ci = df_ave['Net CO2 assimilation rate'].values
-    gs_ave_ci = df_ave['Stomatal conductance for CO2'].values
+    Ci_ave_ci = df_ave['Intercellular_ CO2_concentration'].values
+    A_ave_ci = df_ave['Net_CO2_assimilation_rate'].values
+    gs_ave_ci = df_ave['Stomata _conductance_for_CO2'].values
     phiPS2 = df_ave['PhiPS2'].values
     A_std = df_ave['Photo_err'].values
     gs_std = df_ave['gs_err'].values
@@ -427,8 +427,6 @@ s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 
 
-
-
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
         
@@ -472,7 +470,6 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
           'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
-
 
 df_params.loc[0,'Rd']=Rd
 df_params.loc[0,'Rd_err']=Rd_err
@@ -742,12 +739,12 @@ df_params.loc[3,'bH']=bH_bL['bH'].values
 df_params.loc[3,'Std.err_bH']=bH_bL['Std.err_bH'].values
 df_params.loc[3,'bL']=bH_bL['bH'].values
 df_params.loc[3,'Std.err_bL']=bH_bL['Std.err_bL'].values
-df_params.loc[3,'Vcmax']=vcmax['Vcmax'].values
-df_params.loc[3,'Vcmax_err']=vcmax['Vcmax_err'].values
-df_params.loc[3,'Tp']=vcmax['Tp'].values
-df_params.loc[3,'Tp_err']=vcmax['Tp_err'].values
-df_params.loc[3,'Sigma_gm']=vcmax['Sigma_gm'].values
-df_params.loc[3,'Sigma_gm_err']=vcmax['Sigma_gm_err'].values
+df_params.loc[3,'Vcmax']=vcmax_var_gm['Vcmax'].values
+df_params.loc[3,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
+df_params.loc[3,'Tp']=vcmax_var_gm['Tp'].values
+df_params.loc[3,'Tp_err']=vcmax_var_gm['Tp_err'].values
+df_params.loc[3,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
+df_params.loc[3,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
 #Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
 #Vcmax_values.to_excel(PATH +'Parameters_Vcmax_variable_gm_.xlsx', index = False)
 #df_params.to_excel(PATH +'Parameters_all.xlsx', index = False)

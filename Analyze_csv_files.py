@@ -124,13 +124,13 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         df1['Replicate'] = [i+1]*len(data_frame[i])
         df1['Species'] = species
         df1['Treatment'] = treatment
-        df1['Measurement type'] = curve
-        df1['Oxygen level'] = [Oxygen]*len(data_frame[i])
-        df1['Net CO2 assimilation rate'] = A[:]
-        df1['Intercellular CO2 concentration'] = Ci[:]
+        df1['Measurement_type'] = curve
+        df1['Oxygen_level'] = [Oxygen]*len(data_frame[i])
+        df1['Net_CO2_assimilation_rate'] = A[:]
+        df1['Intercellular_CO2_concentration'] = Ci[:]
         df1['PhiPS2'] = PhiPS2[:]
         df1['Irradiance'] = I[:]
-        df1['Stomatal conductance for CO2'] = gs[:]
+        df1['Stomatal_conductance_for_CO2'] = gs[:]
         df1['CO2S'] = CO2S[:]
         df1['CO2R'] = CO2R[:]        
         df1['Trmmol'] = Trmmol[:]
@@ -140,7 +140,7 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         Gas_Exchange_data=Gas_Exchange_data.append(df1)
     return Gas_Exchange_data
   
-columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
+columns = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate','Intercellular_CO2_concentration','PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL
@@ -415,4 +415,4 @@ vpdL_Hi_HL_e = vpdL_Hi_HL.std(axis=0)
 
 
 #
-#Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
+Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)

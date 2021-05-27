@@ -187,7 +187,7 @@ class Estimate_FvCB_parameters:
             A_I_r= AI[AI['Replicate']==replicate]
             I = A_I_r['Irradiance'].values            
             PhiPS2 = A_I_r['PhiPS2'].values
-            A = A_I_r['Net CO2 assimilation rate'].values
+            A = A_I_r['Net_CO2_assimilation_rate'].values
             X = PhiPS2*I/4
             result = stats.linregress(X, A) #slope, intercept, r, p, se 
             df.loc[count,'Rd'] = result.intercept
@@ -224,7 +224,7 @@ class Estimate_FvCB_parameters:
             A_I_r= AI[AI['Replicate']==replicate]
             I = A_I_r['Irradiance'].values            
             PhiPS2 = A_I_r['PhiPS2'].values
-            A = A_I_r['Net CO2 assimilation rate'].values
+            A = A_I_r['Net_CO2_assimilation_rate'].values
             X = PhiPS2*I*absorbance/4
             result = stats.linregress(X, A) #slope, intercept, r, p, se 
             df.loc[count,'Rd'] = result.intercept
@@ -267,10 +267,10 @@ class Estimate_FvCB_parameters:
             I_O2 = A_I_r_O2['Irradiance'].values            
             PhiPS2_O2 = A_I_r_O2['PhiPS2'].values
             
-            A = A_I_r['Net CO2 assimilation rate'].values
+            A = A_I_r['Net_CO2_assimilation_rate'].values
             X = PhiPS2*I/4
             
-            A_O2 = A_I_r_O2['Net CO2 assimilation rate'].values
+            A_O2 = A_I_r_O2['Net_CO2_assimilation_rate'].values
             X_O2 = PhiPS2_O2*I_O2/4
             
             x_data = np.concatenate((X,X_O2),axis=None)
@@ -626,11 +626,11 @@ class Estimate_FvCB_parameters:
         for replicate in replicates:  
             df2 = pd.DataFrame([],columns=cols)
             ACIH_r = ACIH[ACIH['Replicate']==replicate]
-            AH = ACIH_r['Net CO2 assimilation rate'].values
-            CiH = ACIH_r['Intercellular CO2 concentration'].values 
+            AH = ACIH_r['Net_CO2_assimilation_rate'].values
+            CiH = ACIH_r['Intercellular_CO2_concentration'].values 
             ACIL_r = ACIL[ACIL['Replicate']==replicate]
-            AL = ACIL_r['Net CO2 assimilation rate'].values
-            CiL = ACIL_r['Intercellular CO2 concentration'].values  
+            AL = ACIL_r['Net_CO2_assimilation_rate'].values
+            CiL = ACIL_r['Intercellular_CO2_concentration'].values  
             Rd_value = Rd_values[count]*-1
             df2.loc[:,'AH'] = AH
             df2.loc[:,'CiH'] = CiH
@@ -751,9 +751,9 @@ class Estimate_FvCB_parameters:
             for replicate in replicates:
                 df = pd.DataFrame([],columns = cols)
                 ACIH_r = ACIH[ACIH['Replicate']==replicate]
-                ci = ACIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+                ci = ACIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
                 i_inc = ACIH_r['Irradiance'].values
-                A = ACIH_r['Net CO2 assimilation rate'].values  
+                A = ACIH_r['Net_CO2_assimilation_rate'].values  
 
                 rd = Rd[replicate-1]
                 theta = Theta
@@ -781,9 +781,9 @@ class Estimate_FvCB_parameters:
             for replicate in replicates:
                 df = pd.DataFrame([],columns = cols)
                 ACIH_r = AIH[AIH['Replicate']==replicate]
-                ci = ACIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+                ci = ACIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
                 i_inc = ACIH_r['Irradiance'].values
-                A = ACIH_r['Net CO2 assimilation rate'].values   
+                A = ACIH_r['Net_CO2_assimilation_rate'].values   
 
                 rd = Rd[replicate-1]
                 k2LL = K2LL[replicate-1]
@@ -933,8 +933,9 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
-        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        A = ACI['Net_CO2_assimilation_rate'].values 
+        ci = ACI['Intercellular_CO2_concentration'].values*constants.atm/10**5
+        len_ci_pts = len(ci)
         i_inc = ACI['Irradiance'].values   
         gamma_x = 0.5*210/sco
         [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc,'')
@@ -942,22 +943,23 @@ class Estimate_FvCB_parameters:
         A_mod_ci = np.reshape(A_mod_ci,(4,len_ci_pts))
         J = np.array([J]).transpose()
         J = np.reshape(J,(4,len_ci_pts))
-        gm_ci = np.array([gm_ci]).transpose()
-        gm_ci = np.reshape(gm_ci,(4,len_ci_pts))
+
         
         Rd = np.mean(rds)
         AA = gamma_x*(J + 8*(A + Rd))
         gm_ci =  A/(ci-AA/(J-4*(A+Rd)));
+        gm_ci = np.array([gm_ci]).transpose()
+        gm_ci = np.reshape(gm_ci,(4,len_ci_pts))
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
-        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        A_i = AI['Net_CO2_assimilation_rate'].values 
+        ci_i = AI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i,'')
         AA = gamma_x*(J + 8*(A_i + Rd))
         gm_i =  A_i/(ci_i-AA/(J-4*(A_i+Rd)));
-        
+        len_i_pts=len(i_inc_i)
         A_mod_i = np.array([A_mod_i]).transpose()
         A_mod_i = np.reshape(A_mod_i,(4,len_i_pts))
         J = np.array([J]).transpose()
@@ -990,11 +992,11 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.get_ACI_data()
-        ACI = ACI[ACI['Oxygen level']==0.21]
+        ACI = ACI[ACI['Oxygen_level']==0.21]
 
-        A = ACI['Net CO2 assimilation rate'].values 
+        A = ACI['Net_CO2_assimilation_rate'].values 
         # A_err = ACI['Photo_err'].values/2 
-        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        ci = ACI['Intercellular_CO2_concentration'].values*constants.atm/10**5
 
         i_inc = ACI['Irradiance'].values       
         [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc,'ACI')
@@ -1023,9 +1025,9 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.get_AI_data()
-        A_i = AI['Net CO2 assimilation rate'].values 
+        A_i = AI['Net_CO2_assimilation_rate'].values 
         # A_err_i = AI['Photo_err'].values/2 
-        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        ci_i = AI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i,J] = self.calculate_A_mod_ave(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i,'AI')
         
@@ -1144,9 +1146,9 @@ class Estimate_FvCB_parameters:
         df_vcmax = pd.DataFrame([],columns = cols)
         df = pd.DataFrame([],columns = cols)
         ACIH_r = ACIH[ACIH['Replicate']==replicate]
-        ci = ACIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+        ci = ACIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
         i_inc = ACIH_r['Irradiance'].values
-        A = ACIH_r['Net CO2 assimilation rate'].values            
+        A = ACIH_r['Net_CO2_assimilation_rate'].values            
         df.loc[:,'A'] = A                        
         df.loc[:,'Rd'] = Rd*-1
         df.loc[:,'Theta'] = theta
@@ -1160,9 +1162,9 @@ class Estimate_FvCB_parameters:
         AIH = self.gas_exch_measurement.get_AI_data()            
         df = pd.DataFrame([],columns = cols)
         AIH_r = AIH[AIH['Replicate']==replicate]
-        ci = AIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+        ci = AIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
         i_inc = AIH_r['Irradiance'].values
-        A = AIH_r['Net CO2 assimilation rate'].values            
+        A = AIH_r['Net_CO2_assimilation_rate'].values            
         df.loc[:,'A'] = A                        
         df.loc[:,'Rd'] = Rd*-1
         df.loc[:,'Theta'] = theta
@@ -1184,9 +1186,9 @@ class Estimate_FvCB_parameters:
             ACIH = self.gas_exch_measurement.get_ACI_data()
             df = pd.DataFrame([],columns = cols)
             ACIH_r = ACIH[ACIH['Replicate']==replicate]
-            ci = ACIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+            ci = ACIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
             i_inc = ACIH_r['Irradiance'].values
-            A = ACIH_r['Net CO2 assimilation rate'].values            
+            A = ACIH_r['Net_CO2_assimilation_rate'].values            
             df.loc[:,'A'] = A                        
             df.loc[:,'Rd'] = Rd*-1
             df.loc[:,'Theta'] = theta
@@ -1200,9 +1202,9 @@ class Estimate_FvCB_parameters:
             AIH = self.gas_exch_measurement.get_AI_data()            
             df = pd.DataFrame([],columns = cols)
             AIH_r = AIH[AIH['Replicate']==replicate]
-            ci = AIH_r['Intercellular CO2 concentration'].values*constants.atm/10**5  
+            ci = AIH_r['Intercellular_CO2_concentration'].values*constants.atm/10**5  
             i_inc = AIH_r['Irradiance'].values
-            A = AIH_r['Net CO2 assimilation rate'].values            
+            A = AIH_r['Net_CO2_assimilation_rate'].values            
             df.loc[:,'A'] = A                        
             df.loc[:,'Rd'] = Rd*-1
             df.loc[:,'Theta'] = theta
@@ -1319,16 +1321,16 @@ class Estimate_FvCB_parameters:
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.get_ACI_data()
         ACI = ACI[ACI['Replicate']==replicate]
-        A = ACI['Net CO2 assimilation rate'].values 
-        ci = ACI['Intercellular CO2 concentration'].values
+        A = ACI['Net_CO2_assimilation_rate'].values 
+        ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values       
         A_mod_ci = self.calculate_A_individual_plot(xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci,i_inc)
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.get_AI_data()
         AI = AI[AI['Replicate']==replicate]
-        A_i = AI['Net CO2 assimilation rate'].values 
-        ci_i = AI['Intercellular CO2 concentration'].values
+        A_i = AI['Net_CO2_assimilation_rate'].values 
+        ci_i = AI['Intercellular_CO2_concentration'].values
         i_inc_i = AI['Irradiance'].values       
         A_mod_i = self.calculate_A_individual_plot(xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci_i,i_inc_i)        
 
@@ -1455,17 +1457,17 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
+        A = ACI['Net_CO2_assimilation_rate'].values 
         A_err = ACI['Photo_err'].values/2 
-        ci = ACI['Intercellular CO2 concentration'].values
+        ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values       
         A_mod_ci = self.calculate_A_mod_ave_vcmax_jmax(xo,rds,thetas,gms,k2LLs,sco,ci,i_inc)
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
+        A_i = AI['Net_CO2_assimilation_rate'].values 
         A_err_i = AI['Photo_err'].values/2 
-        ci_i = AI['Intercellular CO2 concentration'].values
+        ci_i = AI['Intercellular_CO2_concentration'].values
         i_inc_i = AI['Irradiance'].values       
         A_mod_i = self.calculate_A_mod_ave_vcmax_jmax(xo,rds,thetas,gms,k2LLs,sco,ci_i,i_inc_i)
         
@@ -1824,8 +1826,8 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
-        ci = ACI['Intercellular CO2 concentration'].values
+        A = ACI['Net_CO2_assimilation_rate'].values 
+        ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values   
         gamma_x = 0.5*210/sco
         [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
@@ -1836,8 +1838,8 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
-        ci_i = AI['Intercellular CO2 concentration'].values
+        A_i = AI['Net_CO2_assimilation_rate'].values 
+        ci_i = AI['Intercellular_CO2_concentration'].values
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
         AA = gamma_x*(J + 8*(A_i + Rd))
@@ -1865,17 +1867,17 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
+        A = ACI['Net_CO2_assimilation_rate'].values 
         A_err = ACI['Photo_err'].values/2 
-        ci = ACI['Intercellular CO2 concentration'].values
+        ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values       
         [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
+        A_i = AI['Net_CO2_assimilation_rate'].values 
         A_err_i = AI['Photo_err'].values/2 
-        ci_i = AI['Intercellular CO2 concentration'].values
+        ci_i = AI['Intercellular_CO2_concentration'].values
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i,J] = self.calculate_A_mod_ave_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
         
@@ -2054,8 +2056,8 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
-        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        A = ACI['Net_CO2_assimilation_rate'].values 
+        ci = ACI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc = ACI['Irradiance'].values   
         gamma_x = 0.5*210/sco
         [A_mod_ci,gm_ci_cf,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
@@ -2066,8 +2068,8 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
-        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        A_i = AI['Net_CO2_assimilation_rate'].values 
+        ci_i = AI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i_cf,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
         AA = gamma_x*(J + 8*(A_i + Rd))
@@ -2095,17 +2097,17 @@ class Estimate_FvCB_parameters:
 
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.average_A_CI()
-        A = ACI['Net CO2 assimilation rate'].values 
+        A = ACI['Net_CO2_assimilation_rate'].values 
         A_err = ACI['Photo_err'].values/2 
-        ci = ACI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        ci = ACI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc = ACI['Irradiance'].values       
         [A_mod_ci,gm_ci,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci,i_inc)
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.average_A_I()
-        A_i = AI['Net CO2 assimilation rate'].values 
+        A_i = AI['Net_CO2_assimilation_rate'].values 
         A_err_i = AI['Photo_err'].values/2 
-        ci_i = AI['Intercellular CO2 concentration'].values*constants.atm/10**5
+        ci_i = AI['Intercellular_CO2_concentration'].values*constants.atm/10**5
         i_inc_i = AI['Irradiance'].values       
         [A_mod_i,gm_i,J] = self.calculate_A_mod_ave_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco,ci_i,i_inc_i)
         
@@ -2182,9 +2184,9 @@ class Estimate_FvCB_parameters:
         self.gas_exch_measurement.set_O2(0.21) 
         ACI = self.gas_exch_measurement.get_ACI_data()
         ACI = ACI[ACI['CO2R']>400]
-        A = ACI['Net CO2 assimilation rate'].values 
+        A = ACI['Net_CO2_assimilation_rate'].values 
 
-        ci = ACI['Intercellular CO2 concentration'].values
+        ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values
         phi2 = ACI['PhiPS2'].values
         O = 210;
