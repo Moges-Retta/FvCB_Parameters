@@ -272,7 +272,7 @@ inputs = {'s':gm.loc['lump','estimate'],'PHI2LL':phi2LL[0][0]}
 Jmax  = parameters.estimate_Jmax(inputs)
 
 inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','estimate']]*4,
-          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
+          'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':sco['Sco'].values}
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 

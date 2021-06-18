@@ -810,10 +810,9 @@ class Estimate_FvCB_parameters:
         vcmax_data.to_excel(PATH +'vcmax_data_leakCorr_'+str(species)+str(treatment)+'.xlsx', index = False)    
         return vcmax_data
        
-    def calculate_A(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+    def calculate_A(self,xo,df_vcmax,sco):
         vcmax,TP,R,gm0 = xo
         
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
@@ -823,6 +822,7 @@ class Estimate_FvCB_parameters:
         O = df_vcmax['O'].values.astype(float)
         
         O = 210 #mbar
+        sco = sco.astype(float)        
         gamma_x = 0.5*O/sco
 #        gm0 = 0
         #Rubisco-limited part;
@@ -880,7 +880,7 @@ class Estimate_FvCB_parameters:
 #        
 #        O = df_vcmax['O'].values.astype(float)
         O = 210 #mbar
-        # sco = sco.astype(float)
+        sco = sco.astype(float)
         sco = np.nanmean(sco)
         
         gamma_x = 0.5*O/sco
@@ -1082,11 +1082,9 @@ class Estimate_FvCB_parameters:
         plt.show()  
 
     
-    def model_Vcmax(self,xo,rds,jmaxs,thetas,k2LLs,sco):
-        A_mod = self.calculate_A(xo,rds,jmaxs,thetas,k2LLs,sco)
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
-        A = df_vcmax['A'].values        
-        return A - A_mod
+    def model_Vcmax(self,xo,df_vcmax,sco):
+        A_mod = self.calculate_A(xo,df_vcmax,sco)
+        return df_vcmax['A'].values - A_mod
     
     
     def estimate_Vcmax(self,inputs):
@@ -1097,12 +1095,15 @@ class Estimate_FvCB_parameters:
         k2LL = inputs.get('k2LL')
         sco = inputs.get('Sco')
         
+        df_vcmax = self.get_vcmax_data(rd,jmax,theta,k2LL)
+
+        
         bnds=((0,0,0,0),(1000,70,20,20)) 
         x0 = np.array([200,12,0.5,1])        #Vcmax,TP,sigma,Jmax        
-        result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
-        # result = optimize.least_squares(self.model_Vcmax,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
+        result = optimize.least_squares(self.model_Vcmax,x0,args=[df_vcmax,sco],method='trf',bounds=bnds)
+        # result = optimize.least_squares(self.model_Vcmax,x0,args=[df_vcmax,sco],method='lm')
         
-        res = self.model_Vcmax(result.x,rd,jmax,theta,k2LL,sco)
+        res = self.model_Vcmax(result.x,df_vcmax,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
@@ -1217,9 +1218,8 @@ class Estimate_FvCB_parameters:
             vcmax_data = vcmax_data.append(df)          
         return vcmax_data
 
-    def calculate_A_individual_plot(self,xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci,i_inc):
+    def calculate_A_individual_plot(self,xo,df_vcmax,replicate,sco,ci,i_inc):
         vcmax,TP,R = xo
-        df_vcmax = self.get_vcmax_data_individual_plot(rds,jmaxs,thetas,k2LLs,replicate)
         rd = df_vcmax['Rd'].values.astype(float)
         rd = np.nanmean(rd)
         jmax = df_vcmax['Jmax'].values.astype(float)
@@ -1264,9 +1264,8 @@ class Estimate_FvCB_parameters:
         return A_mod
     
        
-    def calculate_A_individual(self,x0,rd,jmax,theta,k2LL,sco,replicate):
+    def calculate_A_individual(self,x0,df_vcmax,sco,replicate):
         vcmax,TP,R = x0
-        df_vcmax = self.get_vcmax_data_individual(rd,jmax,theta,k2LL,replicate)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
@@ -1311,13 +1310,11 @@ class Estimate_FvCB_parameters:
         return A_mod
 
  
-    def model_Vcmax_individual(self,xo,rd,jmax,theta,k2LL,sco,replicate):
-        A_mod = self.calculate_A_individual(xo,rd,jmax,theta,k2LL,sco,replicate)
-        df_vcmax = self.get_vcmax_data_individual(rd,jmax,theta,k2LL,replicate)
-        A = df_vcmax['A'].values 
-        return A - A_mod
+    def model_Vcmax_individual(self,xo,df_vcmax,sco,replicate):
+        A_mod = self.calculate_A_individual(xo,df_vcmax,sco,replicate)
+        return df_vcmax['A'].values - A_mod
     
-    def plot_A_individual(self,xo,rds,jmaxs,thetas,k2LLs,replicate,sco):
+    def plot_A_individual(self,xo,df_vcmax,replicate,sco):
        
         self.gas_exch_measurement.set_O2(0.21)      
         ACI = self.gas_exch_measurement.get_ACI_data()
@@ -1325,7 +1322,7 @@ class Estimate_FvCB_parameters:
         A = ACI['Net_CO2_assimilation_rate'].values 
         ci = ACI['Intercellular_CO2_concentration'].values
         i_inc = ACI['Irradiance'].values       
-        A_mod_ci = self.calculate_A_individual_plot(xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci,i_inc)
+        A_mod_ci = self.calculate_A_individual_plot(xo,df_vcmax,replicate,sco,ci,i_inc)
 
         self.gas_exch_measurement.set_O2(0.21)      
         AI = self.gas_exch_measurement.get_AI_data()
@@ -1333,7 +1330,7 @@ class Estimate_FvCB_parameters:
         A_i = AI['Net_CO2_assimilation_rate'].values 
         ci_i = AI['Intercellular_CO2_concentration'].values
         i_inc_i = AI['Irradiance'].values       
-        A_mod_i = self.calculate_A_individual_plot(xo,rds,jmaxs,thetas,k2LLs,replicate,sco,ci_i,i_inc_i)        
+        A_mod_i = self.calculate_A_individual_plot(xo,df_vcmax,replicate,sco,ci_i,i_inc_i)        
 
         fig,(ax1,ax2) = plt.subplots(ncols=2,constrained_layout=True)        
         ax1.plot(ci,A,'ko',label='Expt.',markersize=8)
@@ -1364,12 +1361,14 @@ class Estimate_FvCB_parameters:
             theta = thetas[count]            
             k2LLs = inputs.get('k2LL')
             sco = inputs.get('Sco')            
-            k2LL = k2LLs[count]            
+            k2LL = k2LLs[count]    
+            df_vcmax = self.get_vcmax_data_individual(rd,jmax,theta,k2LL,replicate)
+
 #            bnds=((0,0,0),(1000,100,10)) 
             x0 = np.array([250,12,0.5])        #Vcmax, TP ,R     
 #            result = optimize.least_squares(self.model_Vcmax_individual,x0,args=[rd,jmax,theta,k2LL,replicate,sco],method='trf',bounds=bnds)
-            result = optimize.least_squares(self.model_Vcmax_individual,x0,args=[rd,jmax,theta,k2LL,sco,replicate],method='lm')            
-            res = self.model_Vcmax_individual(result.x,rd,jmax,theta,k2LL,sco,replicate)
+            result = optimize.least_squares(self.model_Vcmax_individual,x0,args=[df_vcmax,sco,replicate],method='lm')            
+            res = self.model_Vcmax_individual(result.x,df_vcmax,sco,replicate)
             J = np.array(result.jac)
             S = np.array(res).T.dot(np.array(res))
             H=2*J.T.dot(J);
@@ -1383,7 +1382,7 @@ class Estimate_FvCB_parameters:
             var_2 = np.sqrt(var_2)
             var_3 = np.sqrt(var_3)
             if result.success:
-                self.plot_A_individual(result.x,rd,jmax,theta,k2LL,replicate,sco)
+                self.plot_A_individual(result.x,df_vcmax,replicate,sco)
                 df=pd.DataFrame([],columns=cols)
                 df.loc[count,'Replicate'] = count                
                 df.loc[count,'Vcmax'] = result.x[0]
@@ -1548,15 +1547,13 @@ class Estimate_FvCB_parameters:
         return A_mod_arr
 
     
-    def model_Vcmax_jmax(self,xo,rds,thetas,gms,k2LLs,sco):
+    def model_Vcmax_jmax(self,xo,df_vcmax,gms,sco):
         vcmax1,vcmax2,vcmax3,vcmax4,TP1,TP2,TP3,TP4,R,jmax1,jmax2,jmax3,jmax4 = xo
         
         vcmaxs =  [vcmax1,vcmax2,vcmax3,vcmax4]
         jmaxs =  [jmax1,jmax2,jmax3,jmax4]
         tps =  [TP1,TP2,TP3,TP4]
         
-        df_vcmax = self.get_vcmax_data(rds,0,thetas,k2LLs) #jmax = 0
-
         kmc = 267
         kmo = 164
 
@@ -1569,8 +1566,8 @@ class Estimate_FvCB_parameters:
             i_inc = df_vcmax_r['Iinc'].values.astype(float) 
             theta = df_vcmax_r['Theta'].values.astype(float)  
             O = df_vcmax_r['O'].values.astype(float)
-            #rds = df_vcmax_r['Rd'].values.astype(float)
-            #k2LLs = df_vcmax_r['k2LL'].values.astype(float)
+            rds = df_vcmax_r['Rd'].values.astype(float)
+            k2LLs = df_vcmax_r['k2LL'].values.astype(float)
             vcmax =  vcmaxs[replicate-1]
             jmax =  jmaxs[replicate-1]
             TP =  tps[replicate-1]
@@ -1628,13 +1625,15 @@ class Estimate_FvCB_parameters:
         k2LL=[r for r in k2LL] 
         gms=[r for r in gms] 
         
+        df_vcmax = self.get_vcmax_data(rd,0,theta,k2LL) #jmax = 0
+        
         bnds=((50,50,50,50,8,8,8,8,0,100,100,100,100),(400,400,400,400,30,30,30,30,1,600,600,600,600)) 
         x0 = np.array([140,190,170,140,12,16,15,12,0.5,220,274,277,222])        # 4 values of Vcmax,TP,sigma,Jmax
     
-        result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[rd,theta,gms,k2LL,sco],method='trf',bounds=bnds)
-        # result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[rd,theta,gms,k2LL,sco],method='lm')
+        result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[df_vcmax,gms,sco],method='trf',bounds=bnds)
+        # result = optimize.least_squares(self.model_Vcmax_jmax,x0,args=[df_vcmax,gms,sco],method='lm')
         
-        res = self.model_Vcmax_jmax(result.x,rd,theta,gms,k2LL,sco)
+        res = self.model_Vcmax_jmax(result.x,df_vcmax,gms,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
@@ -1714,10 +1713,9 @@ class Estimate_FvCB_parameters:
 
 
 
-    def calculate_A_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+    def calculate_A_const_gm(self,xo,df_vcmax,sco):
         vcmax,TP,gm0 = xo
         
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
@@ -1897,11 +1895,9 @@ class Estimate_FvCB_parameters:
         plt.show()  
 
     
-    def model_Vcmax_const_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
-        A_mod = self.calculate_A_const_gm(xo,rds,jmaxs,thetas,k2LLs,sco)
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
-        A = df_vcmax['A'].values        
-        return A - A_mod
+    def model_Vcmax_const_gm(self,xo,df_vcmax,sco):
+        A_mod = self.calculate_A_const_gm(xo,df_vcmax,sco)
+        return df_vcmax['A'].values - A_mod
     
     
     def estimate_Vcmax_constant_gm(self,inputs):
@@ -1911,12 +1907,14 @@ class Estimate_FvCB_parameters:
         k2LL = inputs.get('k2LL')
         sco = inputs.get('Sco')
         
+        df_vcmax = self.get_vcmax_data(rd,jmax,theta,k2LL)
+        
         bnds=((0,0,0.1),(1000,70,20)) 
         x0 = np.array([200,23,1.5])        #Vcmax,TP,sigma,Jmax        
-        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
-#        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
+        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[df_vcmax,sco],method='trf',bounds=bnds)
+#        result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[df_vcmax,sco],method='lm')
         
-        res = self.model_Vcmax_const_gm(result.x,rd,jmax,theta,k2LL,sco)
+        res = self.model_Vcmax_const_gm(result.x,df_vcmax,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
@@ -1950,10 +1948,9 @@ class Estimate_FvCB_parameters:
             return []        
 
 
-    def calculate_A_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
+    def calculate_A_var_gm(self,xo,df_vcmax,sco):
         vcmax,TP,R = xo
         
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
         rd = df_vcmax['Rd'].values.astype(float)
         jmax = df_vcmax['Jmax'].values.astype(float)
         theta = df_vcmax['Theta'].values.astype(float)
@@ -2127,11 +2124,9 @@ class Estimate_FvCB_parameters:
         plt.show()  
 
     
-    def model_Vcmax_var_gm(self,xo,rds,jmaxs,thetas,k2LLs,sco):
-        A_mod = self.calculate_A_var_gm(xo,rds,jmaxs,thetas,k2LLs,sco)
-        df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LLs)
-        A = df_vcmax['A'].values        
-        return A - A_mod
+    def model_Vcmax_var_gm(self,xo,df_vcmax,sco):
+        A_mod = self.calculate_A_var_gm(xo,df_vcmax,sco)
+        return df_vcmax['A'].values - A_mod
     
     
     def estimate_Vcmax_var_gm(self,inputs):
@@ -2141,12 +2136,15 @@ class Estimate_FvCB_parameters:
         k2LL = inputs.get('k2LL')
         sco = inputs.get('Sco')
         
+        df_vcmax = self.get_vcmax_data(rd,jmax,theta,k2LL)
+
+        
         bnds=((0,0,0),(1000,70,20)) 
         x0 = np.array([200,12,0.5])        #Vcmax,TP,sigma        
-        result = optimize.least_squares(self.model_Vcmax_var_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='trf',bounds=bnds)
+        result = optimize.least_squares(self.model_Vcmax_var_gm,x0,args=[df_vcmax,sco],method='trf',bounds=bnds)
         # result = optimize.least_squares(self.model_Vcmax_const_gm,x0,args=[rd,jmax,theta,k2LL,sco],method='lm')
         
-        res = self.model_Vcmax_var_gm(result.x,rd,jmax,theta,k2LL,sco)
+        res = self.model_Vcmax_var_gm(result.x,df_vcmax,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
@@ -2290,15 +2288,7 @@ class Estimate_FvCB_parameters:
         """
         
         alphaGMax, alphaSMax, Nmax,vcmax1,vcmax2,vcmax3,vcmax4,TP1,TP2,TP3,TP4 = xo
-        rds = inputs.get('Rd')
-        jmaxs = inputs.get('Jmax')
-        thetas = inputs.get('Theta')
-        k2LL = inputs.get('k2LL')
-        
-        vcmaxs =  [vcmax1,vcmax2,vcmax3,vcmax4]
-        tps =  [TP1,TP2,TP3,TP4]
-        
-        df_vcmax = self.get_vcmax_data_Bush(rds,jmaxs,thetas,k2LL) 
+
         
         kmc = 267
         kmo = 164
@@ -2374,6 +2364,7 @@ class Estimate_FvCB_parameters:
 
     
     def estimate_Vcmax_Bush(self,inputs):
+        
       
         #alphaGMax, alphaSMax, Nmax, Vcmax1-4,TP1-4
         bnds=((0.0001,0,0,0,0,0,0,0,0,0,0),(1,1,20,500,500,500,500,50,50,50,50)) 
