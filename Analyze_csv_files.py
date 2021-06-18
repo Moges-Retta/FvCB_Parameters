@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import sqrt
 
-FORMAT = ['Photo','Cond','Ci',"CO2R",'CO2S','PhiPS2','CO2S','PARi','Trmmol','BLCond','VpdL']
+FORMAT = ['Photo','Cond','Ci',"CO2R",'CO2S','PhiPS2','CO2S','PARi','Trmmol','BLCond','VpdL','H2OR','H2OS',\
+                   'Flow','Area','Trmmol','BLCond'];
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 species_code = ['Hi','Bn']
 treatment =['HL','LL']
@@ -105,7 +106,12 @@ def plot_response(treatment,data,measurement_days):
 #FORMAT = ['Photo','Cond','Ci','Fv/Fm', 'PhiPS2','CO2S','PARi']
 
 def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
-    columns = ['Replicate','Species','Treatment','Measurement type','Oxygen level','Net CO2 assimilation rate','Intercellular CO2 concentration','PhiPS2','Irradiance','Stomatal conductance for CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
+    columns = ['Replicate','Species','Treatment','Measurement type',\
+               'Oxygen level','Net CO2 assimilation rate',\
+                   'Intercellular CO2 concentration','PhiPS2','Irradiance',\
+                       'Stomatal conductance for CO2','CO2S','CO2R','Trmmol',\
+                           'BLCond','VpdL','H2OR','H2OS',\
+                               'Flow','Area']
     Gas_Exchange_data = pd.DataFrame([],columns=columns )
     for i in range(0,len(data_frame)):
         AI = data_frame[i]
@@ -120,6 +126,11 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         BLCond = AI['BLCond'].values
         vpdL = AI['VpdL'].values
         PhiPS2 = AI['PhiPS2'].values
+        H2OR = AI['H2OR'].values
+        H2OS = AI['H2OS'].values
+        Flow = AI['Flow'].values
+        Area = AI['Area'].values
+
         df1 = pd.DataFrame([],columns=columns )
         df1['Replicate'] = [i+1]*len(data_frame[i])
         df1['Species'] = species
@@ -136,11 +147,21 @@ def replicates_to_Excel(data_frame,species,Oxygen,curve,treatment):
         df1['Trmmol'] = Trmmol[:]
         df1['BLCond'] = BLCond[:]
         df1['VpdL'] = vpdL[:]
+        df1['H2OR']=H2OR[:]
+        df1['H2OS']=H2OS[:]
+        df1['Flow']=Flow[:]
+        df1['Area']=Area[:]
         
         Gas_Exchange_data=Gas_Exchange_data.append(df1)
     return Gas_Exchange_data
+
+
   
-columns = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level','Net_CO2_assimilation_rate','Intercellular_CO2_concentration','PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2S','CO2R','Trmmol','BLCond','VpdL']
+columns = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level',\
+           'Net_CO2_assimilation_rate','Intercellular_CO2_concentration',\
+               'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2S',\
+                   'CO2R','Trmmol','BLCond','VpdL','H2OR','H2OS',\
+                   'Flow','Area']
 Gas_Exchange_data = pd.DataFrame([],columns=columns )   
 
 # B.Nigra LL
@@ -416,3 +437,9 @@ vpdL_Hi_HL_e = vpdL_Hi_HL.std(axis=0)
 
 #
 Gas_Exchange_data.to_excel(PATH + 'Gas_Exchange_data.xlsx', index = False)
+
+
+
+
+
+

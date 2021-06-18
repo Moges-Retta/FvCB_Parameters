@@ -12,6 +12,21 @@ from scipy import stats
 
 PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
+#Correct the raw data for leakage
+species = ['B.Nigra','H.Incana']
+treatments = ['HL','LL']
+
+Gas_Exchange_data_corr = pd.DataFrame([])
+for plant in species:
+    for treatment in treatments:
+        gas_exch_measurement = Gas_exchange_measurement(0.21,plant,treatment)
+        df = gas_exch_measurement.correct_leak(plant,treatment)
+        Gas_Exchange_data_corr=Gas_Exchange_data_corr.append(df)
+        
+# Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
+
+
+
 species = 'B.Nigra'
 treatment = 'LL'
 O = 0.21
@@ -30,6 +45,7 @@ treatment = 'HL'
 O = 0.21
 gas_exch_measurement.set_species('B.Nigra')
 gas_exch_measurement.set_treatment('HL')
+gas_exch_measurement.correct_leak(species,treatment);
 
 df_ave = gas_exch_measurement.get_average_values('ACI')
 #gas_exch_measurement.plot_ave_A_CI(df_ave)
@@ -44,6 +60,7 @@ treatment = 'HL'
 O = 0.21
 gas_exch_measurement.set_species('H.Incana')
 gas_exch_measurement.set_treatment('HL')
+gas_exch_measurement.correct_leak(species,treatment);
 
 df_ave = gas_exch_measurement.get_average_values('ACI')
 #gas_exch_measurement.plot_ave_A_CI(df_ave)
@@ -124,6 +141,7 @@ Rd_values_O2=Rd_values_O2.append(R_O2)
 
 species = 'B.Nigra'
 treatment = 'HL'
+
 O = 0.02
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
@@ -535,7 +553,7 @@ bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 #sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
-          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':sco['Sco'].values}
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':3.259}
 
 vcmax_full = parameters.estimate_Vcmax(inputs)
 vcmax_var_gm = parameters.estimate_Vcmax_var_gm(inputs)
@@ -557,6 +575,14 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
           'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4,'Sco':3.259}
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
+
+
+inputs = {'Rd':[Rd]*4,'Jmax':Jmax_individual['Jmax'].values,'Theta':Jmax_individual['theta'].values,\
+          'k2LL':gm.loc['lump','estimate']*phi2LL[0][0]}
+
+vcmax_Bush = parameters.estimate_Vcmax_Bush(inputs)
+
+
 
 #parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
 
