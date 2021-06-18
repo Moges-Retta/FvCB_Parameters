@@ -25,77 +25,43 @@ for plant in species:
         
 # Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
 
-
-
-species = 'B.Nigra'
-treatment = 'LL'
-O = 0.21
-
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-df_ave = gas_exch_measurement.get_average_values('ACI')
-#gas_exch_measurement.plot_ave_A_CI(df_ave)
-#gas_exch_measurement.plot_ave_gs_CI(df_ave)
-
-df_ave = gas_exch_measurement.get_average_values('AI')
-#gas_exch_measurement.plot_ave_A_I(df_ave)
-#gas_exch_measurement.plot_ave_gs_I(df_ave)
-
-species = 'B.Nigra'
-treatment = 'HL'
-O = 0.21
-gas_exch_measurement.set_species('B.Nigra')
-gas_exch_measurement.set_treatment('HL')
-gas_exch_measurement.correct_leak(species,treatment);
-
-df_ave = gas_exch_measurement.get_average_values('ACI')
-#gas_exch_measurement.plot_ave_A_CI(df_ave)
-#gas_exch_measurement.plot_ave_gs_CI(df_ave)
-
-df_ave = gas_exch_measurement.get_average_values('AI')
-#gas_exch_measurement.plot_ave_A_I(df_ave)
-#gas_exch_measurement.plot_ave_gs_I(df_ave)
-
-species = 'H.Incana'
-treatment = 'HL'
-O = 0.21
-gas_exch_measurement.set_species('H.Incana')
-gas_exch_measurement.set_treatment('HL')
-gas_exch_measurement.correct_leak(species,treatment);
-
-df_ave = gas_exch_measurement.get_average_values('ACI')
-#gas_exch_measurement.plot_ave_A_CI(df_ave)
-#gas_exch_measurement.plot_ave_gs_CI(df_ave)
-
-df_ave = gas_exch_measurement.get_average_values('AI')
-#gas_exch_measurement.plot_ave_A_I(df_ave)
-#gas_exch_measurement.plot_ave_gs_I(df_ave)
-
-species = 'H.Incana'
-treatment = 'LL'
-O = 0.21
-
-gas_exch_measurement.set_species('H.Incana')
-gas_exch_measurement.set_treatment('LL')
-
-df_ave = gas_exch_measurement.get_average_values('ACI')
-#gas_exch_measurement.plot_ave_A_CI(df_ave)
-#gas_exch_measurement.plot_ave_gs_CI(df_ave)
-
-df_ave = gas_exch_measurement.get_average_values('AI')
-#gas_exch_measurement.plot_ave_A_I(df_ave)
-#gas_exch_measurement.plot_ave_gs_I(df_ave)
-
-# compare measurements
-
-gas_exch_measurement = Gas_exchange_measurement(0.21,'','')
-ave_gas_Exchange_data = gas_exch_measurement.make_avareage_data() #all data
-gas_exch_measurement.compare_A(ave_gas_Exchange_data)
-gas_exch_measurement.compare_gs(ave_gas_Exchange_data)
-gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
-
-# Estimate Rd values
+Jmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Jmax','theta','Jmax_err','theta_err'])
+Vcmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Vcmax','Tp','Vcmax_err','Tp_err','Sigma_gm','Sigma_gm_err'])
 Rd_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
 Rd_values_O2 = Rd_values;
+Phi2LL_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Phi2LL','Phi2LL_err'])
+
+cols = ['Plant','Treatment','Vcmax','Rd','Sco','Tp','Jmax','k2LL','theta',\
+        'Vcmax_err','Rd_err','Sco_err','Tp_err','Jmax_err','theta_err','bH','bH_err',\
+        'Std.err_bH','Std.err_bL','Sigma_gm','Sigma_gm_err']
+
+df_params=pd.DataFrame([],columns=cols)
+
+
+def Parameter_tabel(row,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm):
+    df_params.loc[row,'Rd']=Rd
+    df_params.loc[row,'Rd_err']=Rd_err
+    df_params.loc[row,'k2LL']=s*phi2LL[0][0]
+    df_params.loc[row,'Jmax']=Jmax[0][0]
+    df_params.loc[row,'Jmax_err']=Jmax[1]
+    df_params.loc[row,'theta']=Jmax[0][1]
+    df_params.loc[row,'theta_err']=Jmax[2]
+    df_params.loc[row,'Plant']=species
+    df_params.loc[row,'Treatment']=treatment
+    df_params.loc[row,'Sco']=sco['Sco'].values
+    df_params.loc[row,'Sco_err']=sco['Std.err'].values
+    df_params.loc[row,'bH']=bH_bL['bH'].values
+    df_params.loc[row,'Std.err_bH']=bH_bL['Std.err_bH'].values
+    df_params.loc[row,'bL']=bH_bL['bH'].values
+    df_params.loc[row,'Std.err_bL']=bH_bL['Std.err_bL'].values
+    df_params.loc[row,'Vcmax']=vcmax_var_gm['Vcmax'].values
+    df_params.loc[row,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
+    df_params.loc[row,'Tp']=vcmax_var_gm['Tp'].values
+    df_params.loc[row,'Tp_err']=vcmax_var_gm['Tp_err'].values
+    df_params.loc[row,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
+    df_params.loc[row,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
+    if row==4:
+        df_params.to_excel(PATH +'Parameters_all.xlsx', index = False)
 
 def Rd_tabel(Rds,species,treatment):
         df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Rd','Slope','Std.err'])
@@ -107,117 +73,7 @@ def Rd_tabel(Rds,species,treatment):
         df['Slope']=Rds['Slope'].values
         
         return df
-
-species = 'H.Incana'
-treatment = 'LL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL = parameters.estimate_Rd()
-
-gas_exch_measurement.set_O2(0.21)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL_O2 = parameters.estimate_Rd()
-R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-Rd_values_O2=Rd_values_O2.append(R_O2)
-
-Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-species = 'H.Incana'
-treatment = 'HL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_HL = parameters.estimate_Rd()
-Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-gas_exch_measurement.set_O2(0.21)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL_O2 = parameters.estimate_Rd()
-R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-Rd_values_O2=Rd_values_O2.append(R_O2)
-
-species = 'B.Nigra'
-treatment = 'HL'
-
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Bn_HL = parameters.estimate_Rd()
-Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-gas_exch_measurement.set_O2(0.21)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL_O2 = parameters.estimate_Rd()
-R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-Rd_values_O2=Rd_values_O2.append(R_O2)
-
-species = 'B.Nigra'
-treatment = 'LL'
-O = 0.02
-gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Bn_LL = parameters.estimate_Rd()
-Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
-Rd_values=Rd_values.append(Rd)
-
-gas_exch_measurement.set_O2(0.21)
-parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL_O2 = parameters.estimate_Rd()
-R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-Rd_values_O2=Rd_values_O2.append(R_O2)
-
-p_treatment = parameters.anova_test_treatments(Rd_values)
-p_species = parameters.anova_test_species(Rd_values)
-
-p_treatment = parameters.anova_test_treatments(Rd_values_O2)
-p_species = parameters.anova_test_species(Rd_values_O2)
-
-# Compare Rd between 2 % O2 and 21 % O2 
-plants = Rd_values['Species'].unique()
-treatments = Rd_values['Treatment'].unique()
-replicates = Rd_values['Replicate'].unique()
-cols = ['Species','Treatment','p']
-compare_Rd_O2_level = pd.DataFrame([],columns = cols)
-for plant in plants:
-    x = Rd_values[Rd_values['Species']==plant]
-    y = Rd_values_O2[Rd_values_O2['Species']==plant]    
-    for treatment in treatments:
-        df=pd.DataFrame([],columns=cols)
-        xd = x[x['Treatment']==treatment]
-        yd = y[y['Treatment']==treatment]            
-        rd1 = xd['Rd'].values
-        rd2 = yd['Rd'].values
-        [t,p]= stats.ttest_ind(rd1,rd2, equal_var = False)
-        df.loc[0,'Species']=plant
-        df.loc[0,'Treatment']=treatment
-        df.loc[0,'p']=p       
-        compare_Rd_O2_level = compare_Rd_O2_level.append(df)
-#Rd_values.to_excel(PATH + 'Parameters_Rd_300.xlsx', index = False)
-#Rd_values_O2.to_excel(PATH + 'Parameters_Rd_300_21_O2.xlsx', index = False)
-
-#file_path = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\Parameters_Rd_300.xlsx')
-#df_old = pd.read_excel('Parameters_Rd_300.xlsx')
-#df_old2 = pd.read_excel('Parameters_Rd_300_21_O2.xlsx')
-#writer = pd.ExcelWriter(file_path, engine = 'xlsxwriter')
-#df_old.to_excel(writer, sheet_name = 'Rd 2% O2')
-#Rd_values_O2.to_excel(writer, sheet_name = 'Rd 21% O2')
-#compare_Rd_O2_level.to_excel(writer, sheet_name = 'compare_2_21_O2-770')
-#writer.save()
-#writer.close()
-        
-
-boxplot = Rd_values.boxplot(column=['Rd'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1))
-boxplot[0].set_ylabel('R$_d$ (µmol $m^{-2}$ $s^{-1}$)')
-boxplot.set_title('')
-
-# Estimate FvCB kinetics and Jmax
-Jmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Jmax','theta','Jmax_err','theta_err'])
-Vcmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Vcmax','Tp','Vcmax_err','Tp_err','Sigma_gm','Sigma_gm_err'])
-
+    
 def Jmax_tabel(Jmaxs,species,treatment):
         df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Jmax','theta','Jmax_err','theta_err'])
         df['Species']=[species]*4
@@ -243,8 +99,6 @@ def Vcmax_tabel(Vcmaxs,species,treatment):
         return df
 
 
-Phi2LL_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Phi2LL','Phi2LL_err'])
-
 def Phi2LL_tabel(Phi2LLs,species,treatment):
         df = pd.DataFrame([], columns=['Species','Treatment','Replicate','Phi2LL','Phi2LL_err'])
         df['Species']=[species]*4
@@ -253,20 +107,116 @@ def Phi2LL_tabel(Phi2LLs,species,treatment):
         df['Replicate']=Phi2LLs['Replicate'].values
         df['Phi2LL_err']=Phi2LLs['Phi2LL_err'].values
         
-        return df
-    
-    
-cols = ['Plant','Treatment','Vcmax','Rd','Sco','Tp','Jmax','k2LL','theta',\
-        'Vcmax_err','Rd_err','Sco_err','Tp_err','Jmax_err','theta_err','bH','bH_err',\
-        'Std.err_bH','Std.err_bL','Sigma_gm','Sigma_gm_err']
-df_params=pd.DataFrame([],columns=cols)
+        return df    
+
+
+# compare measurements
+
+gas_exch_measurement = Gas_exchange_measurement(0.21,'','')
+ave_gas_Exchange_data = gas_exch_measurement.make_avareage_data() #all data
+gas_exch_measurement.compare_A(ave_gas_Exchange_data)
+gas_exch_measurement.compare_gs(ave_gas_Exchange_data)
+gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
+
+
+# species = 'H.Incana'
+# treatment = 'LL'
+# O = 0.02
+# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_LL = parameters.estimate_Rd()
+
+# gas_exch_measurement.set_O2(0.21)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_LL_O2 = parameters.estimate_Rd()
+# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+# Rd_values_O2=Rd_values_O2.append(R_O2)
+
+# Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
+# Rd_values=Rd_values.append(Rd)
+
+# species = 'H.Incana'
+# treatment = 'HL'
+# O = 0.02
+# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_HL = parameters.estimate_Rd()
+# Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
+# Rd_values=Rd_values.append(Rd)
+
+# gas_exch_measurement.set_O2(0.21)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_LL_O2 = parameters.estimate_Rd()
+# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+# Rd_values_O2=Rd_values_O2.append(R_O2)
+
+# species = 'B.Nigra'
+# treatment = 'HL'
+
+# O = 0.02
+# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Bn_HL = parameters.estimate_Rd()
+# Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
+# Rd_values=Rd_values.append(Rd)
+
+# gas_exch_measurement.set_O2(0.21)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_LL_O2 = parameters.estimate_Rd()
+# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+# Rd_values_O2=Rd_values_O2.append(R_O2)
+
+
+# species = 'B.Nigra'
+# treatment = 'LL'
+# O = 0.21
+# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+# df_ave = gas_exch_measurement.get_average_values('ACI')
+# #gas_exch_measurement.plot_ave_A_CI(df_ave)
+# #gas_exch_measurement.plot_ave_gs_CI(df_ave)
+
+# df_ave = gas_exch_measurement.get_average_values('AI')
+# #gas_exch_measurement.plot_ave_A_I(df_ave)
+# #gas_exch_measurement.plot_ave_gs_I(df_ave)
+
+# gas_exch_measurement.set_O2(0.02)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Bn_LL = parameters.estimate_Rd()
+# Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+# Rd_values=Rd_values.append(Rd)
+
+# gas_exch_measurement.set_O2(0.21)
+# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+# Rd_Hi_LL_O2 = parameters.estimate_Rd()
+# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+# Rd_values_O2=Rd_values_O2.append(R_O2)
+
+# Estimate FvCB kinetics parameters
 
 species = 'B.Nigra'
 treatment = 'LL'
-O = 0.02
+O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+df_ave = gas_exch_measurement.get_average_values('ACI')
+#gas_exch_measurement.plot_ave_A_CI(df_ave)
+#gas_exch_measurement.plot_ave_gs_CI(df_ave)
+
+df_ave = gas_exch_measurement.get_average_values('AI')
+#gas_exch_measurement.plot_ave_A_I(df_ave)
+#gas_exch_measurement.plot_ave_gs_I(df_ave)
+
+gas_exch_measurement.set_O2(0.02)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
+Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
 
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
@@ -314,6 +264,7 @@ vcmax_individual = parameters.estimate_individual_Vcmax(inputs)
 Vcmaxs=Vcmax_tabel(vcmax_individual,species,treatment)
 Vcmax_values=Vcmax_values.append(Vcmaxs)
 
+
 # NRH procedure, input Rd,phi2ll,lump: estimates: vcmax, Jmax, Tp, sigma
 gm = parameters.NRH_A_gm(Rd)
 
@@ -325,37 +276,36 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
-df_params.loc[0,'Rd']=Rd
-df_params.loc[0,'Rd_err']=Rd_err
-df_params.loc[0,'k2LL']=s*phi2LL[0][0]
-df_params.loc[0,'Jmax']=Jmax[0][0]
-df_params.loc[0,'Jmax_err']=Jmax[1]
-df_params.loc[0,'theta']=Jmax[0][1]
-df_params.loc[0,'theta_err']=Jmax[2]
-df_params.loc[0,'Plant']=species
-df_params.loc[0,'Treatment']=treatment
-df_params.loc[0,'Sco']=sco['Sco'].values
-df_params.loc[0,'Sco_err']=sco['Std.err'].values
-df_params.loc[0,'bH']=bH_bL['bH'].values
-df_params.loc[0,'Std.err_bH']=bH_bL['Std.err_bH'].values
-df_params.loc[0,'bL']=bH_bL['bH'].values
-df_params.loc[0,'Std.err_bL']=bH_bL['Std.err_bL'].values
-df_params.loc[0,'Vcmax']=vcmax_var_gm['Vcmax'].values
-df_params.loc[0,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
-df_params.loc[0,'Tp']=vcmax_var_gm['Tp'].values
-df_params.loc[0,'Tp_err']=vcmax_var_gm['Tp_err'].values
-df_params.loc[0,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
-df_params.loc[0,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
+Parameter_tabel(0,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm)
+
 
 species = 'B.Nigra'
 treatment = 'HL'
-O = 0.02
+O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+df_ave = gas_exch_measurement.get_average_values('ACI')
+#gas_exch_measurement.plot_ave_A_CI(df_ave)
+#gas_exch_measurement.plot_ave_gs_CI(df_ave)
+
+df_ave = gas_exch_measurement.get_average_values('AI')
+#gas_exch_measurement.plot_ave_A_I(df_ave)
+#gas_exch_measurement.plot_ave_gs_I(df_ave)
+
+gas_exch_measurement.set_O2(0.02)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
+Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
 
 #parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
@@ -409,39 +359,29 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
+Parameter_tabel(1,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm)
 
-df_params.loc[1,'Rd']=Rd
-df_params.loc[1,'Rd_err']=Rd_err
-df_params.loc[1,'k2LL']=s*phi2LL[0][0]
-df_params.loc[1,'Jmax']=Jmax[0][0]
-df_params.loc[1,'Jmax_err']=Jmax[1]
-df_params.loc[1,'theta']=Jmax[0][1]
-df_params.loc[1,'theta_err']=Jmax[2]
-df_params.loc[1,'Plant']=species
-df_params.loc[1,'Treatment']=treatment
-df_params.loc[1,'Sco']=sco['Sco'].values
-df_params.loc[1,'Sco_err']=sco['Std.err'].values
-df_params.loc[1,'bH']=bH_bL['bH'].values
-df_params.loc[1,'Std.err_bH']=bH_bL['Std.err_bH'].values
-df_params.loc[1,'bL']=bH_bL['bH'].values
-df_params.loc[1,'Std.err_bL']=bH_bL['Std.err_bL'].values
-df_params.loc[1,'Vcmax']=vcmax_var_gm['Vcmax'].values
-df_params.loc[1,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
-df_params.loc[1,'Tp']=vcmax_var_gm['Tp'].values
-df_params.loc[1,'Tp_err']=vcmax_var_gm['Tp_err'].values
-df_params.loc[1,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
-df_params.loc[1,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
 
 species = 'H.Incana'
 treatment = 'LL'
-O = 0.02
+O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+df_ave = gas_exch_measurement.get_average_values('ACI')
+#gas_exch_measurement.plot_ave_A_CI(df_ave)
+#gas_exch_measurement.plot_ave_gs_CI(df_ave)
+
+df_ave = gas_exch_measurement.get_average_values('AI')
+#gas_exch_measurement.plot_ave_A_I(df_ave)
+#gas_exch_measurement.plot_ave_gs_I(df_ave)
+
+gas_exch_measurement.set_O2(0.02)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
-
+Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
 #Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
@@ -493,39 +433,28 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
 
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
-
-df_params.loc[2,'Rd']=Rd
-df_params.loc[2,'Rd_err']=Rd_err
-df_params.loc[2,'k2LL']=s*phi2LL[0][0]
-df_params.loc[2,'Jmax']=Jmax[0][0]
-df_params.loc[2,'Jmax_err']=Jmax[1]
-df_params.loc[2,'theta']=Jmax[0][1]
-df_params.loc[2,'theta_err']=Jmax[2]
-df_params.loc[2,'Plant']=species
-df_params.loc[2,'Treatment']=treatment
-df_params.loc[2,'Sco']=sco['Sco'].values
-df_params.loc[2,'Sco_err']=sco['Std.err'].values
-df_params.loc[2,'bH']=bH_bL['bH'].values
-df_params.loc[2,'Std.err_bH']=bH_bL['Std.err_bH'].values
-df_params.loc[2,'bL']=bH_bL['bH'].values
-df_params.loc[2,'Std.err_bL']=bH_bL['Std.err_bL'].values
-df_params.loc[2,'Vcmax']=vcmax_var_gm['Vcmax'].values
-df_params.loc[2,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
-df_params.loc[2,'Tp']=vcmax_var_gm['Tp'].values
-df_params.loc[2,'Tp_err']=vcmax_var_gm['Tp_err'].values
-df_params.loc[2,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
-df_params.loc[2,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
+Parameter_tabel(2,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm)
 
 species = 'H.Incana'
 treatment = 'HL'
-O = 0.02
+O = 0.21
 gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
+df_ave = gas_exch_measurement.get_average_values('ACI')
+#gas_exch_measurement.plot_ave_A_CI(df_ave)
+#gas_exch_measurement.plot_ave_gs_CI(df_ave)
+
+df_ave = gas_exch_measurement.get_average_values('AI')
+#gas_exch_measurement.plot_ave_A_I(df_ave)
+#gas_exch_measurement.plot_ave_gs_I(df_ave)
+
+gas_exch_measurement.set_O2(0.02)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 Rd_Bn_LL = parameters.estimate_Rd()
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
-
+Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
+Rd_values=Rd_values.append(Rd)
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
 #Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
@@ -582,35 +511,13 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax_individual['Jmax'].values,'Theta':Jmax_individ
 
 vcmax_Bush = parameters.estimate_Vcmax_Bush(inputs)
 
-
-
 #parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
 
-df_params.loc[3,'Rd']=Rd
-df_params.loc[3,'Rd_err']=Rd_err
-df_params.loc[3,'k2LL']=s*phi2LL[0][0]
-df_params.loc[3,'Jmax']=Jmax[0][0]
-df_params.loc[3,'Jmax_err']=Jmax[1]
-df_params.loc[3,'theta']=Jmax[0][1]
-df_params.loc[3,'theta_err']=Jmax[2]
-df_params.loc[3,'Plant']=species
-df_params.loc[3,'Treatment']=treatment
-df_params.loc[3,'Sco']=sco['Sco'].values
-df_params.loc[3,'Sco_err']=sco['Std.err'].values
-df_params.loc[3,'bH']=bH_bL['bH'].values
-df_params.loc[3,'Std.err_bH']=bH_bL['Std.err_bH'].values
-df_params.loc[3,'bL']=bH_bL['bH'].values
-df_params.loc[3,'Std.err_bL']=bH_bL['Std.err_bL'].values
-df_params.loc[3,'Vcmax']=vcmax_var_gm['Vcmax'].values
-df_params.loc[3,'Vcmax_err']=vcmax_var_gm['Vcmax_err'].values
-df_params.loc[3,'Tp']=vcmax_var_gm['Tp'].values
-df_params.loc[3,'Tp_err']=vcmax_var_gm['Tp_err'].values
-df_params.loc[3,'Sigma_gm']=vcmax_var_gm['Sigma_gm'].values
-df_params.loc[3,'Sigma_gm_err']=vcmax_var_gm['Sigma_gm_err'].values
-#Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
-#Vcmax_values.to_excel(PATH +'Parameters_Vcmax_variable_gm_.xlsx', index = False)
-#df_params.to_excel(PATH +'Parameters_all.xlsx', index = False)
+Parameter_tabel(3,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm)
 
+boxplot = Rd_values.boxplot(column=['Rd'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1))
+boxplot[0].set_ylabel('R$_d$ (µmol $m^{-2}$ $s^{-1}$)')
+boxplot.set_title('')
 
 boxplot = Jmax_values.boxplot(column=['Jmax'], by=['Treatment','Species'],figsize = (8,10),grid=False,layout=(2, 1),fontsize=16)
 boxplot[0].set_ylabel('J$_{max}$ (µmol $m^{-2}$ $s^{-1}$)',fontsize=16)
@@ -625,3 +532,44 @@ boxplot[0].set_ylabel('V$_{cmax}$ (µmol $m^{-2}$ $s^{-1}$)',fontsize=16)
 parameters.compare_k2(k2_Hi_HL,k2_Bn_HL,'H.Incana','B.Nigra')
 parameters.compare_k2(k2_Hi_LL,k2_Bn_LL,'H.Incana','B.Nigra')
 
+p_treatment = parameters.anova_test_treatments(Rd_values)
+p_species = parameters.anova_test_species(Rd_values)
+
+p_treatment = parameters.anova_test_treatments(Rd_values_O2)
+p_species = parameters.anova_test_species(Rd_values_O2)
+
+# Compare Rd between 2 % O2 and 21 % O2 
+plants = Rd_values['Species'].unique()
+treatments = Rd_values['Treatment'].unique()
+replicates = Rd_values['Replicate'].unique()
+cols = ['Species','Treatment','p']
+compare_Rd_O2_level = pd.DataFrame([],columns = cols)
+for plant in plants:
+    x = Rd_values[Rd_values['Species']==plant]
+    y = Rd_values_O2[Rd_values_O2['Species']==plant]    
+    for treatment in treatments:
+        df=pd.DataFrame([],columns=cols)
+        xd = x[x['Treatment']==treatment]
+        yd = y[y['Treatment']==treatment]            
+        rd1 = xd['Rd'].values
+        rd2 = yd['Rd'].values
+        [t,p]= stats.ttest_ind(rd1,rd2, equal_var = False)
+        df.loc[0,'Species']=plant
+        df.loc[0,'Treatment']=treatment
+        df.loc[0,'p']=p       
+        compare_Rd_O2_level = compare_Rd_O2_level.append(df)
+#Rd_values.to_excel(PATH + 'Parameters_Rd_300.xlsx', index = False)
+#Rd_values_O2.to_excel(PATH + 'Parameters_Rd_300_21_O2.xlsx', index = False)
+
+#file_path = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\Parameters_Rd_300.xlsx')
+#df_old = pd.read_excel('Parameters_Rd_300.xlsx')
+#df_old2 = pd.read_excel('Parameters_Rd_300_21_O2.xlsx')
+#writer = pd.ExcelWriter(file_path, engine = 'xlsxwriter')
+#df_old.to_excel(writer, sheet_name = 'Rd 2% O2')
+#Rd_values_O2.to_excel(writer, sheet_name = 'Rd 21% O2')
+#compare_Rd_O2_level.to_excel(writer, sheet_name = 'compare_2_21_O2-770')
+#writer.save()
+#writer.close()     
+#Jmax_values.to_excel(PATH +'Parameters_Jmax_theta.xlsx', index = False)
+#Vcmax_values.to_excel(PATH +'Parameters_Vcmax_variable_gm_.xlsx', index = False)
+#df_params.to_excel(PATH +'Parameters_all.xlsx', index = False)
