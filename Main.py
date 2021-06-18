@@ -37,7 +37,6 @@ cols = ['Plant','Treatment','Vcmax','Rd','Sco','Tp','Jmax','k2LL','theta',\
 
 df_params=pd.DataFrame([],columns=cols)
 
-
 def Parameter_tabel(row,species,treatment,Rd,Rd_err,Jmax,sco,bH_bL,vcmax_var_gm):
     df_params.loc[row,'Rd']=Rd
     df_params.loc[row,'Rd_err']=Rd_err
@@ -110,7 +109,7 @@ def Phi2LL_tabel(Phi2LLs,species,treatment):
         return df    
 
 
-# compare measurements
+# compare photosynthesis, gs and PhiPS2
 
 gas_exch_measurement = Gas_exchange_measurement(0.21,'','')
 ave_gas_Exchange_data = gas_exch_measurement.make_avareage_data() #all data
@@ -118,78 +117,6 @@ gas_exch_measurement.compare_A(ave_gas_Exchange_data)
 gas_exch_measurement.compare_gs(ave_gas_Exchange_data)
 gas_exch_measurement.compare_PhiPSII(ave_gas_Exchange_data)
 
-
-# species = 'H.Incana'
-# treatment = 'LL'
-# O = 0.02
-# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_LL = parameters.estimate_Rd()
-
-# gas_exch_measurement.set_O2(0.21)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_LL_O2 = parameters.estimate_Rd()
-# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-# Rd_values_O2=Rd_values_O2.append(R_O2)
-
-# Rd = Rd_tabel(Rd_Hi_LL,species,treatment)
-# Rd_values=Rd_values.append(Rd)
-
-# species = 'H.Incana'
-# treatment = 'HL'
-# O = 0.02
-# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_HL = parameters.estimate_Rd()
-# Rd =Rd_tabel(Rd_Hi_HL,species,treatment)
-# Rd_values=Rd_values.append(Rd)
-
-# gas_exch_measurement.set_O2(0.21)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_LL_O2 = parameters.estimate_Rd()
-# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-# Rd_values_O2=Rd_values_O2.append(R_O2)
-
-# species = 'B.Nigra'
-# treatment = 'HL'
-
-# O = 0.02
-# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Bn_HL = parameters.estimate_Rd()
-# Rd=Rd_tabel(Rd_Bn_HL,species,treatment)
-# Rd_values=Rd_values.append(Rd)
-
-# gas_exch_measurement.set_O2(0.21)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_LL_O2 = parameters.estimate_Rd()
-# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-# Rd_values_O2=Rd_values_O2.append(R_O2)
-
-
-# species = 'B.Nigra'
-# treatment = 'LL'
-# O = 0.21
-# gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-# df_ave = gas_exch_measurement.get_average_values('ACI')
-# #gas_exch_measurement.plot_ave_A_CI(df_ave)
-# #gas_exch_measurement.plot_ave_gs_CI(df_ave)
-
-# df_ave = gas_exch_measurement.get_average_values('AI')
-# #gas_exch_measurement.plot_ave_A_I(df_ave)
-# #gas_exch_measurement.plot_ave_gs_I(df_ave)
-
-# gas_exch_measurement.set_O2(0.02)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Bn_LL = parameters.estimate_Rd()
-# Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
-# Rd_values=Rd_values.append(Rd)
-
-# gas_exch_measurement.set_O2(0.21)
-# parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-# Rd_Hi_LL_O2 = parameters.estimate_Rd()
-# R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
-# Rd_values_O2=Rd_values_O2.append(R_O2)
 
 # Estimate FvCB kinetics parameters
 
