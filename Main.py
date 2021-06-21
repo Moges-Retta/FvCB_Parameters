@@ -409,7 +409,7 @@ bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
 #sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
-          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':3.259}
+          'k2LL':Rd_Bn_LL['Slope'].values*phi2LL_individual['Phi2LL'].values,'Sco':sco['Sco'].values}
 
 vcmax_full = parameters.estimate_Vcmax(inputs)
 vcmax_var_gm = parameters.estimate_Vcmax_var_gm(inputs)
@@ -433,10 +433,12 @@ inputs = {'Rd':[Rd]*4,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],'gms':[gm.loc['gm','e
 vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
 
-inputs = {'Rd':[Rd]*4,'Jmax':Jmax_individual['Jmax'].values,'Theta':Jmax_individual['theta'].values,\
-          'k2LL':gm.loc['lump','estimate']*phi2LL[0][0]}
+# inputs = {'Rd':[Rd]*4,'Jmax':Jmax_individual['Jmax'].values,'Theta':Jmax_individual['theta'].values,\
+#           'k2LL':[gm.loc['lump','estimate']*phi2LL[0][0]]*4}
 
-vcmax_Bush = parameters.estimate_Vcmax_Bush(inputs)
+# vcmax_Bush = parameters.estimate_Vcmax_Bush(inputs)
+vcmax_Bush_XY = parameters.estimate_Vcmax_Bush_XY(inputs)
+
 
 #parameters.compare_k2(k2_Hi_HL,k2_Hi_LL,'HL','LL')
 

@@ -14,7 +14,8 @@ PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
 
 class Gas_exchange_measurement:
-    data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
+    # data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
+    data = pd.read_excel ('Gas_Exchange_data.xlsx') 
     
     # FORMAT = ['Replicate','Species','Treatment','Measurement_type',\
     #           'Oxygen_level','Net_CO2_assimilation_rate', \
