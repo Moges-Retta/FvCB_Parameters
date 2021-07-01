@@ -14,14 +14,7 @@ PATH = (r'\\WURNET.NL\Homes\retta001\My Documents\Project\2021\GasExchange\\')
 
 
 class Gas_exchange_measurement:
-    # data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
-    data = pd.read_excel ('Gas_Exchange_data.xlsx') 
-    
-    # FORMAT = ['Replicate','Species','Treatment','Measurement_type',\
-    #           'Oxygen_level','Net_CO2_assimilation_rate', \
-    #         'Intercellular_CO2_concentration', 'PhiPS2','Irradiance',\
-    #     'Stomatal_conductance_for_CO2','CO2S','CO2R','BLCond',\
-    #     'VpdL','H2OR','H2OS','Flow','Area','Trmmol']
+    data = pd.read_excel ('Gas_Exchange_data_leak_corr.xlsx') 
     FORMAT = ['Replicate','Species','Treatment','Measurement_type','Oxygen_level',\
               'Net_CO2_assimilation_rate', 'Intercellular_CO2_concentration', \
                   'PhiPS2','Irradiance','Stomatal_conductance_for_CO2','CO2R']
@@ -678,7 +671,6 @@ class Gas_exchange_measurement:
         return p_values
 
 
-     
     def average_A_CI_df(self,df):
         A_CI_d = df[df['Oxygen_level']==self.get_O2()]
         A_CI_d = A_CI_d[A_CI_d['Species']==self.get_species()]
@@ -688,7 +680,7 @@ class Gas_exchange_measurement:
         replicates = A_CI_d['Replicate'].unique()
 
         cols = ['Irradiance','Intercellular_CO2_concentration','Net_CO2_assimilation_rate',\
-                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','gs_err','PhiPS2_err']
+                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','Ci_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
         df_ci = pd.DataFrame([])
         df_A = pd.DataFrame([])
@@ -719,6 +711,8 @@ class Gas_exchange_measurement:
         df_ave.loc[:,'Stomatal_conductance_for_CO2'] = np.nanmean(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
         df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
+        df_ave.loc[:,'Ci_err'] = np.nanstd(df_ci,axis=1)
+
         df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)
         df_ave = df_ave.sort_values(by=['Intercellular_CO2_concentration'])
@@ -739,7 +733,7 @@ class Gas_exchange_measurement:
         df_phi = pd.DataFrame([])
         count = 0
         cols = ['Irradiance','Intercellular_CO2_concentration','Net_CO2_assimilation_rate',\
-                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','gs_err','PhiPS2_err']
+                'PhiPS2','Stomatal_conductance_for_CO2','Photo_err','Ci_err','gs_err','PhiPS2_err']
         df_ave = pd.DataFrame([],columns = cols)
         
         for replicate in replicates:
@@ -762,6 +756,7 @@ class Gas_exchange_measurement:
         df_ave.loc[:,'Stomatal_conductance_for_CO2'] = np.nanmean(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
         df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
+        df_ave.loc[:,'Ci_err'] = np.nanstd(df_ci,axis=1)        
         df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)        
         df_ave = df_ave.sort_values(by=['Irradiance'])            
@@ -769,62 +764,91 @@ class Gas_exchange_measurement:
         
       
 
-    def compare_leak_corr(self,Gas_Exchange_data_corr):
+    def compare_leak_corr(self,Gas_Exchange_data_corr,data):
 
         CO2R = [100,150,200,250,300,400,500,600,700,850,1000,1200,1500,1800,2000]
         
         df_ave_ACI_corr=self.average_A_CI_df(Gas_Exchange_data_corr)
         df_ave_AI_corr=self.average_A_I_df(Gas_Exchange_data_corr)
 
-        df_ave_ACI=self.average_A_CI()
-        df_ave_AI=self.average_A_I()
+        df_ave_ACI=self.average_A_CI_df(data)
+        df_ave_AI=self.average_A_I_df(data)
         
         Ci_ave_ci_corr = df_ave_ACI_corr['Intercellular_CO2_concentration'].values
         A_ave_ci_corr = df_ave_ACI_corr['Net_CO2_assimilation_rate'].values
+        A_std_ci_corr = df_ave_ACI_corr['Photo_err'].values
+        Ci_std_ci_corr = df_ave_ACI_corr['Ci_err'].values
         
         Ci_ave_ci = df_ave_ACI['Intercellular_CO2_concentration'].values
         A_ave_ci = df_ave_ACI['Net_CO2_assimilation_rate'].values
-        # A_std_ci = df_ave_ACI['Photo_err'].values
+        A_std_ci = df_ave_ACI['Photo_err'].values
+        Ci_std_ci = df_ave_ACI['Ci_err'].values
         
         i_ave_i_corr = df_ave_AI_corr['Irradiance'].values
         A_ave_i_corr = df_ave_AI_corr['Net_CO2_assimilation_rate'].values
         Ci_ave_i_corr = df_ave_AI_corr['Intercellular_CO2_concentration'].values
+        A_std_i_corr = df_ave_AI_corr['Photo_err'].values
+        Ci_std_i_corr = df_ave_AI_corr['Ci_err'].values
 
         i_ave_i = df_ave_AI['Irradiance'].values
         A_ave_i = df_ave_AI['Net_CO2_assimilation_rate'].values
         Ci_ave_i = df_ave_AI['Intercellular_CO2_concentration'].values
-        # A_std_i = df_ave_AI['Photo_err'].values
+        A_std_i = df_ave_AI['Photo_err'].values
+        Ci_std_i = df_ave_AI['Ci_err'].values
         
         fig, ax = plt.subplots(2,2,constrained_layout=True)
         plt.rcParams["figure.figsize"] = (20,20)
+        ax[0][0].errorbar(Ci_ave_ci,A_ave_ci,A_std_ci,fmt='o',markersize=12)      
+        # ax[0][0].plot(Ci_ave_ci,A_ave_ci,'r-',linewidth=2,label='Raw')
+        # ax[0][0].plot(Ci_ave_ci_corr,A_ave_ci_corr,'k-',linewidth=2,label='Corrected')
+        ax[0][0].errorbar(Ci_ave_ci_corr,A_ave_ci_corr,A_std_ci_corr,fmt='o',markersize=12)      
+
+        ax[0][0].set_xlabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=32)
+        ax[0][0].set_ylabel('Net photosynthesis(µmol $m^{-2}$ s$^{-1}$ )',fontsize=32)
+        # ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))        
+        
+        ax[0][1].errorbar(i_ave_i,A_ave_i,A_std_i,fmt='o',label='Raw',markersize=12)      
+        # ax[0][1].plot(i_ave_i,A_ave_i,'r-',linewidth=2,label='Raw')
+        ax[0][1].errorbar(i_ave_i_corr,A_ave_i_corr,A_std_i_corr,fmt='o',label='Corrected',markersize=12)      
+
+        # ax[0][1].plot(i_ave_i_corr,A_ave_i_corr,'k-',linewidth=2,label='Corrected')
+        # ax1.plot(i_inc_i,Ap_i,'g-',linewidth=2,label='Ap')
+        # ax[0][1].legend(loc='lower right', fontsize=32)
+
+        ax[0][1].set_xlabel('Irradiance (µmol m$^{-2}$ s$^{-1}$)',fontsize=32)
+        ax[0][1].set_ylabel('Net photosynthesis (µmol $m^{-2}$ s$^{-1}$ )',fontsize=32)   
+
+        ax[1][0].errorbar(CO2R,Ci_ave_ci,Ci_std_ci,fmt='o',label='Raw',markersize=12)      
+        ax[1][0].errorbar(CO2R,Ci_ave_ci_corr,Ci_std_ci_corr,fmt='o',label='Corrected',markersize=12)      
+        
+        # ax[1][0].plot(CO2R,Ci_ave_ci,'r-',linewidth=2,label='Raw')
+        # ax[1][0].plot(CO2R,Ci_ave_ci_corr,'k-',linewidth=2,label='Corrected')
+        ax[1][0].set_ylabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=32)
+        ax[1][0].set_xlabel(' CO2R (µmol mol$^{-1}$)',fontsize=32)
+        # ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))        
+
+        ax[1][1].errorbar(i_ave_i,Ci_ave_i,Ci_std_i,fmt='o',label='Raw',markersize=12)      
+        ax[1][1].errorbar(i_ave_i_corr,Ci_ave_i_corr,Ci_std_i_corr,fmt='o',label='Corrected',markersize=12)      
                 
-        ax[0][0].plot(Ci_ave_ci,A_ave_ci,'r-',linewidth=2,label='Raw')
-        ax[0][0].plot(Ci_ave_ci_corr,A_ave_ci_corr,'k-',linewidth=2,label='Corrected')
-        ax[0][0].set_xlabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=24)
-        ax[0][0].set_ylabel('Net photosynthesis(µmol $m^{-2}$ s$^{-1}$ )',fontsize=24)
-        # ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))        
-        
-        ax[0][1].plot(i_ave_i,A_ave_i,'r-',linewidth=2,label='Raw')
-        ax[0][1].plot(i_ave_i_corr,A_ave_i_corr,'k-',linewidth=2,label='Corrected')
+        # ax[1][1].plot(i_ave_i,Ci_ave_i,'r-',linewidth=2,label='Raw')
+        # ax[1][1].plot(i_ave_i_corr,Ci_ave_i_corr,'k-',linewidth=2,label='Corrected')
         # ax1.plot(i_inc_i,Ap_i,'g-',linewidth=2,label='Ap')
         
-        ax[0][1].set_xlabel('Irradiance (µmol m$^{-2}$ s$^{-1}$)',fontsize=24)
-        ax[0][1].set_ylabel('Net photosynthesis (µmol $m^{-2}$ s$^{-1}$ )',fontsize=24)   
+        ax[1][1].set_xlabel('Irradiance (µmol m$^{-2}$ s$^{-1}$)',fontsize=32)
+        ax[1][1].set_ylabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=32)    
         
-        ax[1][0].plot(CO2R,Ci_ave_ci,'r-',linewidth=2,label='Raw')
-        ax[1][0].plot(CO2R,Ci_ave_ci_corr,'k-',linewidth=2,label='Corrected')
-        ax[1][0].set_ylabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=24)
-        ax[1][0].set_xlabel(' CO2R (µmol mol$^{-1}$)',fontsize=24)
-        # ax[0][0].xaxis.set_ticks(np.arange(0, 2200, 400))        
+        ax[1][1].legend(loc='upper right', fontsize=32)
+        # ax[1][1].set_xticks(fontsize=24)
+        # ax[1][1].set_xticklabels(fontsize=24)
+        ax[0][0].xaxis.set_tick_params(labelsize=24)
+        ax[0][0].yaxis.set_tick_params(labelsize=24)
+        ax[0][1].xaxis.set_tick_params(labelsize=24)
+        ax[0][1].yaxis.set_tick_params(labelsize=24)
+        ax[1][0].xaxis.set_tick_params(labelsize=24)
+        ax[1][0].yaxis.set_tick_params(labelsize=24)
+        ax[1][1].xaxis.set_tick_params(labelsize=24)
+        ax[1][1].yaxis.set_tick_params(labelsize=24)
         
-        ax[1][1].plot(i_ave_i,Ci_ave_i,'r-',linewidth=2,label='Raw')
-        ax[1][1].plot(i_ave_i_corr,Ci_ave_i_corr,'k-',linewidth=2,label='Corrected')
-        # ax1.plot(i_inc_i,Ap_i,'g-',linewidth=2,label='Ap')
-        
-        ax[1][1].set_xlabel('Irradiance (µmol m$^{-2}$ s$^{-1}$)',fontsize=24)
-        ax[1][1].set_ylabel('Intercellular CO$_2$ (µmol mol$^{-1}$)',fontsize=24)    
-        
-        ax[1][1].legend(loc='upper right', fontsize=32)     
         # ax2.xaxis.set_ticks(np.arange(0, 2200, 400)) 
 
 
@@ -832,15 +856,16 @@ class Gas_exchange_measurement:
         
         """ returns species and treatment specific model for the 
         relationship between CO2R-CO2s vs CO2s"""
-        
-        if species=='B.Nigra' and treatment=='HL':          
-            model_delta_co2 = 0.0065*CO2R - 0.1425 # correct for CO2s, BnHL
-        elif species=='B.Nigra' and treatment=='LL':  
-            model_delta_co2 = 0.0065*CO2R - 0.1425 # correct for CO2s, BnHL   
-        elif species=='H.Incana' and treatment=='HL': 
-            model_delta_co2 = 0.0044*CO2R - 0.5706 # correct for CO2s, HiHL
-        else:
-            model_delta_co2 = 0.0044*CO2R - 0.5706 # correct for CO2s, HiHL
+        model_delta_co2 = 0.004*CO2R - 0.6541 # correct for CO2s, BnHL
+
+        # if species=='B.Nigra' and treatment=='HL':          
+        #     model_delta_co2 = 0.0045*CO2R - 0.5742 # correct for CO2s, BnHL
+        # elif species=='B.Nigra' and treatment=='LL':  
+        #     model_delta_co2 = 0.0065*CO2R - 0.1425 # correct for CO2s, BnHL   
+        # elif species=='H.Incana' and treatment=='HL': 
+        #     model_delta_co2 = 0.0044*CO2R - 0.5706 # correct for CO2s, HiHL
+        # else:
+        #     model_delta_co2 = 0.0044*CO2R - 0.5706 # correct for CO2s, HiHL
         return model_delta_co2 
                            
     
@@ -852,16 +877,26 @@ class Gas_exchange_measurement:
         2. correct CO2s for main measurement using the above model
         3. recalculate gbc and Ci and photo  
         """
+        columns = ['Replicate','Species','Treatment','Measurement_type',\
+                   'Oxygen_level','Net_CO2_assimilation_rate',\
+                   'Intercellular_CO2_concentration','PhiPS2','Irradiance',\
+                   'Stomatal_conductance_for_CO2','CO2R','CO2S','H2OR','H2OS',\
+                   'Flow','Area','Trmmol','BLCond']
+            
+        data = pd.read_excel ('Gas_Exchange_data.xlsx') 
+
+        df_selected = data[columns]
+        ACI_corr = df_selected.query('Measurement_type=="A_CI_curve"')
+        AI_corr = df_selected.query('Measurement_type=="A_I_curve"')
+        
         columns = ['Replicate','Species','Treatment','Measurement type',\
                    'Oxygen_level','Net_CO2_assimilation_rate',\
                    'Intercellular_CO2_concentration','PhiPS2','Irradiance',\
                    'Stomatal_conductance_for_CO2','CO2R','CO2S','H2OR','H2OS',\
                    'Flow','Area','Trmmol','BLCond']
         Gas_Exchange_data_corr = pd.DataFrame([],columns=columns )
-        ACI_corr = self.A_CI;
         ACI_corr=ACI_corr[ACI_corr['Species']==species];
         ACI_corr=ACI_corr[ACI_corr['Treatment']==treatment];
-        AI_corr = self.A_I;
         AI_corr=AI_corr[AI_corr['Species']==species];
         AI_corr=AI_corr[AI_corr['Treatment']==treatment];
         
@@ -899,7 +934,6 @@ class Gas_exchange_measurement:
         flow = AI_corr['Flow'].values
         area = AI_corr['Area'].values
         
-        # model_delta_co2 = 0.0065*CO2R - 0.1425 # correct for CO2s
         model_delta_co2 = self.leak_model(species,treatment,CO2R) # correct for CO2s, HiHL
         
         co2s_corrected = CO2S+model_delta_co2
@@ -920,10 +954,88 @@ class Gas_exchange_measurement:
                           'Irradiance','Stomatal_conductance_for_CO2','CO2R']
         Gas_Exchange_data_corr = Gas_Exchange_data_corr[FORMAT]
         
-        self.compare_leak_corr(Gas_Exchange_data_corr)
-        # Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr_'+species+'_'+treatment+'.xlsx', index = False)
+        self.compare_leak_corr(Gas_Exchange_data_corr,data)
+        Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr_'+species+'_'+treatment+'.xlsx', index = False)
         
         return Gas_Exchange_data_corr
         
 
-   
+    def correct_leak_all(self):
+        """
+        Correct for leakage
+        1. correction for CO2s based on linear relationship between CO2R-CO2S and
+        CO2R
+        2. correct CO2s for main measurement using the above model
+        3. recalculate gbc and Ci and photo  
+        """
+        columns = ['Replicate','Species','Treatment','Measurement type',\
+                   'Oxygen_level','Net_CO2_assimilation_rate',\
+                   'Intercellular_CO2_concentration','PhiPS2','Irradiance',\
+                   'Stomatal_conductance_for_CO2','CO2R','CO2S','H2OR','H2OS',\
+                   'Flow','Area','Trmmol','BLCond']
+            
+        data = pd.read_excel ('Gas_Exchange_data.xlsx') 
+
+        df_selected = data[columns]
+        ACI_corr = df_selected.query('Measurement_type=="A_CI_curve"')
+        AI_corr = df_selected.query('Measurement_type=="A_I_curve"')
+    
+        Gas_Exchange_data_corr = pd.DataFrame([],columns=columns )  
+        
+        cond = ACI_corr['Stomatal_conductance_for_CO2'].values
+        blcond = ACI_corr['BLCond'].values
+        trmmol = ACI_corr['Trmmol'].values        
+        CO2S = ACI_corr['CO2S'].values
+        CO2R = ACI_corr['CO2R'].values
+        H2OR = ACI_corr['H2OR'].values
+        H2OS = ACI_corr['H2OS'].values
+        flow = ACI_corr['Flow'].values
+        area = ACI_corr['Area'].values
+
+        model_delta_co2 = self.leak_model('','',CO2R) # correct for CO2s, HiHL
+ 
+        co2s_corrected = CO2S+model_delta_co2
+        a = (1000-H2OR)/(1000-H2OS)        
+        photo_corr = flow*(CO2R-co2s_corrected*a)/(100*area)           
+        gbl_corr = 1/(1.6/cond+1.37/blcond)
+        ci_corr = ((gbl_corr-trmmol/2000)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/2000)
+        
+        ACI_corr.loc[:,'Net_CO2_assimilation_rate']=photo_corr
+        ACI_corr.loc[:,'Intercellular_CO2_concentration']=ci_corr        
+        ACI_corr.loc[:,'Measurement_type']=ACI_corr['Measurement_type'].values        
+        Gas_Exchange_data_corr= Gas_Exchange_data_corr.append(ACI_corr)
+        
+        cond = AI_corr['Stomatal_conductance_for_CO2'].values
+        blcond = AI_corr['BLCond'].values
+        trmmol = AI_corr['Trmmol'].values        
+        CO2S = AI_corr['CO2S'].values
+        CO2R = AI_corr['CO2R'].values
+        H2OR = AI_corr['H2OR'].values
+        H2OS = AI_corr['H2OS'].values
+        flow = AI_corr['Flow'].values
+        area = AI_corr['Area'].values
+        
+        model_delta_co2 = self.leak_model('','',CO2R) # correct for CO2s, HiHL
+        
+        co2s_corrected = CO2S+model_delta_co2
+        a = (1000-H2OR)/(1000-H2OS)        
+        photo_corr = flow*(CO2R-co2s_corrected*a)/(100*area)           
+        gbl_corr = 1/(1.6/cond+1.37/blcond)
+        ci_corr = ((gbl_corr-trmmol/2000)*co2s_corrected-photo_corr)/(gbl_corr+trmmol/2000)
+        
+        AI_corr.loc[:,'Net_CO2_assimilation_rate']=photo_corr
+        AI_corr.loc[:,'Intercellular_CO2_concentration']=ci_corr     
+        AI_corr.loc[:,'Measurement_type']=AI_corr['Measurement_type'].values        
+        
+        Gas_Exchange_data_corr=Gas_Exchange_data_corr.append(AI_corr)
+        
+        FORMAT = ['Replicate','Species','Treatment','Measurement_type',\
+                  'Oxygen_level','Net_CO2_assimilation_rate', \
+                      'Intercellular_CO2_concentration', 'PhiPS2',\
+                          'Irradiance','Stomatal_conductance_for_CO2','CO2R']
+        Gas_Exchange_data_corr = Gas_Exchange_data_corr[FORMAT]
+        
+        # self.compare_leak_corr(Gas_Exchange_data_corr)
+        Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
+        
+        return Gas_Exchange_data_corr   

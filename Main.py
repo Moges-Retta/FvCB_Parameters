@@ -23,6 +23,9 @@ for plant in species:
         df = gas_exch_measurement.correct_leak(plant,treatment)
         Gas_Exchange_data_corr=Gas_Exchange_data_corr.append(df)
         
+gas_exch_measurement = Gas_exchange_measurement(0.21,'B.Nigra','HL')
+gas_exch_measurement.correct_leak_all()
+
 # Gas_Exchange_data_corr.to_excel(PATH + 'Gas_Exchange_data_leak_corr.xlsx', index = False)
 
 Jmax_values = pd.DataFrame([], columns=['Species','Treatment','Replicate','Jmax','theta','Jmax_err','theta_err'])
@@ -140,18 +143,21 @@ Rd_values=Rd_values.append(Rd)
 
 gas_exch_measurement.set_O2(0.21)
 parameters = Estimate_FvCB_parameters(gas_exch_measurement)
-Rd_Hi_LL_O2 = parameters.estimate_Rd()
-R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_Bn_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Bn_LL_O2,species,treatment)
 Rd_values_O2=Rd_values_O2.append(R_O2)
 
 
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
 #Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
-
+# s_common = np.nanmean(Rd_Bn_LL_common['Slope'].values,axis=0)
 #gas_exch_measurement.set_O2(0.21)
 #parameters = Estimate_FvCB_parameters(gas_exch_measurement)
 #Rd_Bn_LL_O2 = parameters.estimate_Rd()
+
+p = parameters.compare_df(Rd_Bn_LL['Rd'].values,Rd_Bn_LL_O2['Rd'].values)
+    
 
 Rd = np.mean(Rd_Bn_LL['Rd'].values,axis=0)
 s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
@@ -233,6 +239,7 @@ Rd_Hi_LL_O2 = parameters.estimate_Rd()
 R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
 Rd_values_O2=Rd_values_O2.append(R_O2)
 
+p = parameters.compare_df(Rd_Bn_LL['Rd'].values,Rd_Hi_LL_O2['Rd'].values)
 
 #parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
@@ -309,6 +316,16 @@ s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
 Rd_values=Rd_values.append(Rd)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
+p = parameters.compare_df(Rd_Bn_LL['Rd'].values,Rd_Hi_LL_O2['Rd'].values)
+
+
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
 #Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
@@ -382,6 +399,15 @@ s = np.nanmean(Rd_Bn_LL['Slope'].values,axis=0)
 Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 Rd=Rd_tabel(Rd_Bn_LL,species,treatment)
 Rd_values=Rd_values.append(Rd)
+
+gas_exch_measurement.set_O2(0.21)
+parameters = Estimate_FvCB_parameters(gas_exch_measurement)
+Rd_Hi_LL_O2 = parameters.estimate_Rd()
+R_O2 = Rd_tabel(Rd_Hi_LL_O2,species,treatment)
+Rd_values_O2=Rd_values_O2.append(R_O2)
+
+p = parameters.compare_df(Rd_Bn_LL['Rd'].values,Rd_Hi_LL_O2['Rd'].values)
+
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
 #Rd_common = np.mean(Rd_Bn_LL_common['Rd'].values,axis=0)
 #Rd_common_err = np.nanstd(Rd_Bn_LL_common['Rd'].values/2,axis=0)
@@ -404,8 +430,9 @@ Jmax  = parameters.estimate_Jmax(inputs)
 Jmaxs = Jmax_tabel(Jmax_individual,species,treatment)
 Jmax_values = Jmax_values.append(Jmaxs)
 
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
+
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values,bH_bL['bH'].values,bH_bL['bL'].values)
 #sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\

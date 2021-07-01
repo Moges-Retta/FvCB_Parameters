@@ -206,6 +206,11 @@ class Estimate_FvCB_parameters:
         return df    
    
 
+    def compare_df(self,df1,df2):
+        [t,p]= stats.ttest_ind(df1,df2, equal_var = False)
+        return p
+     
+        
 # Estimate Rd and calibration factor s
     def estimate_abs_adjusted_Rd(self): 
         
@@ -291,6 +296,7 @@ class Estimate_FvCB_parameters:
         self.plot_Rd(df,df2)
         return df  
          
+    
 # Estimate Jmax
     def model_individual_Jmax(self,params,s,PHI2LL,Iinc,phiPS2): 
         
@@ -624,7 +630,6 @@ class Estimate_FvCB_parameters:
         cols =  ['Replicate','CiH','AH','CiL','AL','Rd']        
         df = pd.DataFrame([],columns=cols)
         replicates = ACIH['Replicate'].unique()
-        count = 0
         for replicate in replicates:  
             df2 = pd.DataFrame([],columns=cols)
             ACIH_r = ACIH[ACIH['Replicate']==replicate]
@@ -633,7 +638,7 @@ class Estimate_FvCB_parameters:
             ACIL_r = ACIL[ACIL['Replicate']==replicate]
             AL = ACIL_r['Net_CO2_assimilation_rate'].values
             CiL = ACIL_r['Intercellular_CO2_concentration'].values  
-            Rd_value = Rd_values[count]*-1
+            Rd_value = Rd_values[replicate-1]*-1
             df2.loc[:,'AH'] = AH
             df2.loc[:,'CiH'] = CiH
             df2.loc[:,'Replicate'] = replicate
@@ -641,7 +646,8 @@ class Estimate_FvCB_parameters:
             df2.loc[:,'AL'] = AL
             df2.loc[:,'CiL'] = CiL    
             df = df.append(df2,'sort=False')
-            count+=1        
+            # df.to_excel(PATH + 'SCO_data_'+self.gas_exch_measurement.get_species()+'_'+ self.gas_exch_measurement.get_treatment()+'.xlsx', index = False)
+        
         return df
     
     def estimate_bH_bL(self,Rd_values):
@@ -653,28 +659,31 @@ class Estimate_FvCB_parameters:
         """
         
         data = self.get_Sco_data(Rd_values)
-        CiH = data['CiH'].values*constants.atm/10**5
-        AH = data['AH'].values   
-        CiL = data['CiL'].values*constants.atm/10**5
-        AL = data['AL'].values   
-        df = pd.DataFrame([],columns=['bH','Std.err_bH','R2_bH','intercept_bH',\
-                          'bL','Std.err_bL','R2_bL','intercept_bL'])
-        result = stats.linregress(CiH, AH) #slope, intercept, r, p, se 
-        bH = result.slope; intercept_bH = result.intercept; 
-        R2_bH = result.rvalue**2
-        df.loc[0,'R2_bH'] = R2_bH
-        df.loc[0,'bH'] = bH
-        df.loc[0,'intercept_bH'] = intercept_bH
-        df.loc[0,'Std.err_bH'] = result.stderr            
-        
-        result = stats.linregress(CiL, AL) #slope, intercept, r, p, se
-        bL = result.slope; intercept_bL = result.intercept; 
-        R2_bL = result.rvalue**2
-        
-        df.loc[0,'R2_bL'] = R2_bL
-        df.loc[0,'bL'] = bL
-        df.loc[0,'intercept_bL'] = intercept_bL
-        df.loc[0,'Std.err_bL'] = result.stderr            
+        replicates = data['Replicate'].unique()
+        df = pd.DataFrame([],columns=['Replicate','bH','Std.err_bH','R2_bH',\
+                             'bL','Std.err_bL','R2_bL'])
+                        
+        for replicate in replicates:  
+            data_r=data[data['Replicate']==replicate]
+            CiH = data_r['CiH'].values*constants.atm/10**5
+            AH = data_r['AH'].values   
+            CiL = data_r['CiL'].values*constants.atm/10**5
+            AL = data_r['AL'].values   
+            result = stats.linregress(CiH, AH) #slope, intercept, r, p, se 
+            bH = result.slope; 
+            R2_bH = result.rvalue**2
+            df.loc[replicate-1,'R2_bH'] = R2_bH
+            df.loc[replicate-1,'bH'] = bH
+            df.loc[replicate-1,'Std.err_bH'] = result.stderr            
+            df.loc[replicate-1,'Replicate'] = replicate            
+            
+            result = stats.linregress(CiL, AL) #slope, intercept, r, p, se
+            bL = result.slope; 
+            R2_bL = result.rvalue**2
+            
+            df.loc[replicate-1,'R2_bL'] = R2_bL
+            df.loc[replicate-1,'bL'] = bL
+            df.loc[replicate-1,'Std.err_bL'] = result.stderr            
 #        
         # plt.rcParams["figure.figsize"] = (10,5)
         # fig, (ax1, ax2) = plt.subplots(ncols=2,constrained_layout=True)        
@@ -700,15 +709,18 @@ class Estimate_FvCB_parameters:
         return df
         
         
-    def model_Sco(self,Sco,Rd_values):
-        df = self.estimate_bH_bL(Rd_values)
-        data = self.get_Sco_data(Rd_values)
+    def model_Sco(self,Sco,data,bH,bL):
+        # df = self.estimate_bH_bL(Rd_values)
+        # data = self.get_Sco_data(Rd_values)
+        bH = [bH,bH,bH,bH]
+        bL = [bL,bL,bL,bL]
+        # data['bH']=bH
         AH = data['AH'].values   
         AL = data['AL'].values 
         
         Rd = data['Rd'].values      
-        bH = df['bH'].values
-        bL = df['bL'].values
+        # bH = data['bH'].values
+        # bL = data['bL'].values
         CiH = data['CiH'].values*constants.atm/10**5
         CiL = data['CiL'].values*constants.atm/10**5   
         OH = 210 #mbar
@@ -718,12 +730,12 @@ class Estimate_FvCB_parameters:
         return diff
         
     
-    def estimate_Sco(self,Rd_values):
+    def estimate_Sco(self,Rd_values,bH,bL):
+        data = self.get_Sco_data(Rd_values)
         bnds=((0.1),(10)) #lb,ub
         x0 = np.array([3.2])   
-        Rd = Rd_values.astype(np.float64)
-        result = optimize.least_squares(self.model_Sco,x0,args=[Rd],method='trf',bounds=bnds)
-        res = self.model_Sco(result.x,Rd)
+        result = optimize.least_squares(self.model_Sco,x0,args=[data,bH,bL],method='trf',bounds=bnds)
+        res = self.model_Sco(result.x,data,bH,bL)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
