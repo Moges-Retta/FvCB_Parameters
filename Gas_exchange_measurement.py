@@ -712,7 +712,6 @@ class Gas_exchange_measurement:
         df_ave.loc[:,'PhiPS2'] = np.nanmean(df_phi,axis=1)
         df_ave.loc[:,'Photo_err'] = np.nanstd(df_A,axis=1)
         df_ave.loc[:,'Ci_err'] = np.nanstd(df_ci,axis=1)
-
         df_ave.loc[:,'gs_err'] = np.nanstd(df_gs,axis=1)
         df_ave.loc[:,'PhiPS2_err'] = np.nanstd(df_phi,axis=1)
         df_ave = df_ave.sort_values(by=['Intercellular_CO2_concentration'])

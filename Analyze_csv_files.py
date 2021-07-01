@@ -238,14 +238,25 @@ A_CI_Hi_LL[1]=[]
 A_CI_Hi_LL[1]=data
 
 data = A_CI_Hi_LL[2]
-data=data.drop([20,22]) # duplicate data
+data=data.drop([20,22,31]) # duplicate data
+temp1 = data.iloc[0:6,:]
+temp1=temp1.append(pd.Series(dtype='float64' ), ignore_index = True)
+temp2 = data.iloc[6:17,:]
+temp1=temp1.append(temp2, ignore_index = False)
+
 A_CI_Hi_LL[2]=[]
-A_CI_Hi_LL[2]=data
+A_CI_Hi_LL[2]=temp1
 
 data = A_CI_Hi_LL[3]
 data=data.drop([21]) # duplicate data
+temp1 = data.iloc[0:9,:]
+temp1=temp1.append(pd.Series(dtype='float64' ), ignore_index = True)
+temp1.iloc[9,:]=data.iloc[14,:]
+temp2 = data.iloc[9:14,:]
+temp1=temp1.append(temp2, ignore_index = False)
+
 A_CI_Hi_LL[3]=[]
-A_CI_Hi_LL[3]=data
+A_CI_Hi_LL[3]=temp1
 
 
 #plot_response('Light',A_I_Hi_LL,measurement_days)

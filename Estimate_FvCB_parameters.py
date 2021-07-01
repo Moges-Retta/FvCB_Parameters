@@ -618,7 +618,7 @@ class Estimate_FvCB_parameters:
         self.show_significant(p_values,k2_plant1_ave_d,k2_plant2_ave_d,k2_std1_d,k2_std2_d,ax)          
         return p_values
     
-    def get_Sco_data(self,Rd_values):  
+    def get_Sco_data(self,Rd_values,bH,bL):  
         
         self.gas_exch_measurement.set_O2(0.21)
         ACIH = self.gas_exch_measurement.get_ACI_data()
@@ -627,7 +627,7 @@ class Estimate_FvCB_parameters:
         self.gas_exch_measurement.set_O2(0.02)
         ACIL = self.gas_exch_measurement.get_ACI_data()
         ACIL = ACIL[ACIL['CO2R'].between(40,210)]
-        cols =  ['Replicate','CiH','AH','CiL','AL','Rd']        
+        cols =  ['Replicate','CiH','AH','CiL','AL','Rd','bH','bL']        
         df = pd.DataFrame([],columns=cols)
         replicates = ACIH['Replicate'].unique()
         for replicate in replicates:  
@@ -639,10 +639,15 @@ class Estimate_FvCB_parameters:
             AL = ACIL_r['Net_CO2_assimilation_rate'].values
             CiL = ACIL_r['Intercellular_CO2_concentration'].values  
             Rd_value = Rd_values[replicate-1]*-1
+            bL_value = bL[replicate-1]
+            bH_value = bH[replicate-1]
+            
             df2.loc[:,'AH'] = AH
             df2.loc[:,'CiH'] = CiH
             df2.loc[:,'Replicate'] = replicate
-            df2.loc[:,'Rd'] = Rd_value            
+            df2.loc[:,'Rd'] = Rd_value 
+            df2.loc[:,'bL'] = bL_value            
+            df2.loc[:,'bH'] = bH_value                        
             df2.loc[:,'AL'] = AL
             df2.loc[:,'CiL'] = CiL    
             df = df.append(df2,'sort=False')
@@ -658,7 +663,7 @@ class Estimate_FvCB_parameters:
         
         """
         
-        data = self.get_Sco_data(Rd_values)
+        data = self.get_Sco_data(Rd_values,Rd_values,Rd_values)
         replicates = data['Replicate'].unique()
         df = pd.DataFrame([],columns=['Replicate','bH','Std.err_bH','R2_bH',\
                              'bL','Std.err_bL','R2_bL'])
@@ -709,18 +714,13 @@ class Estimate_FvCB_parameters:
         return df
         
         
-    def model_Sco(self,Sco,data,bH,bL):
-        # df = self.estimate_bH_bL(Rd_values)
-        # data = self.get_Sco_data(Rd_values)
-        bH = [bH,bH,bH,bH]
-        bL = [bL,bL,bL,bL]
-        # data['bH']=bH
+    def model_Sco(self,Sco,data):
         AH = data['AH'].values   
         AL = data['AL'].values 
         
         Rd = data['Rd'].values      
-        # bH = data['bH'].values
-        # bL = data['bL'].values
+        bH = data['bH'].values
+        bL = data['bL'].values
         CiH = data['CiH'].values*constants.atm/10**5
         CiL = data['CiL'].values*constants.atm/10**5   
         OH = 210 #mbar
@@ -731,11 +731,11 @@ class Estimate_FvCB_parameters:
         
     
     def estimate_Sco(self,Rd_values,bH,bL):
-        data = self.get_Sco_data(Rd_values)
+        data = self.get_Sco_data(Rd_values,bH,bL)
         bnds=((0.1),(10)) #lb,ub
         x0 = np.array([3.2])   
-        result = optimize.least_squares(self.model_Sco,x0,args=[data,bH,bL],method='trf',bounds=bnds)
-        res = self.model_Sco(result.x,data,bH,bL)
+        result = optimize.least_squares(self.model_Sco,x0,args=[data],method='trf',bounds=bnds)
+        res = self.model_Sco(result.x,data)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
@@ -2221,7 +2221,7 @@ class Estimate_FvCB_parameters:
         # x0 = np.array([0.5,0.5,0.5,0.5,0.4])        #gm,s'
         bnds=((0,0),(10,1)) 
         x0 = np.array([0.5,0.4])                
-        #result = optimize.least_squares(self.model_NRH_A,x0,args=[rd],method='trf',bounds=bnds)
+        # result = optimize.least_squares(self.model_NRH_A,x0,args=[rd],method='trf',bounds=bnds)
         result = optimize.least_squares(self.model_NRH_A,x0,args=[-1*rd],method='lm')
         
         res = self.model_NRH_A(result.x,rd)

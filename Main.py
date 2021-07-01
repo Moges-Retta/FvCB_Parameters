@@ -165,7 +165,7 @@ Rd_err = np.nanstd(Rd_Bn_LL['Rd'].values/2,axis=0)
 
 
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values,bH_bL['bH'].values,bH_bL['bL'].values)
         
 O = 0.21
 gas_exch_measurement.set_O2(O)
@@ -243,7 +243,9 @@ p = parameters.compare_df(Rd_Bn_LL['Rd'].values,Rd_Hi_LL_O2['Rd'].values)
 
 #parameters.compare_k2(k2_Bn_HL,k2_Bn_LL,'HL','LL')
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+# sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values,bH_bL['bH'].values,bH_bL['bL'].values)
+
 #sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 #Rd_Bn_LL_common = parameters.estimate_Rd_common()
@@ -353,7 +355,7 @@ Jmax  = parameters.estimate_Jmax(inputs)
 #Jmaxs=Jmax_tabel(Jmax_individual,species,treatment)
 #Jmax_values=Jmax_values.append(Jmaxs)
 bH_bL = parameters.estimate_bH_bL(Rd_Bn_LL['Rd'].values)
-sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values)
+sco = parameters.estimate_Sco(Rd_Bn_LL['Rd'].values,bH_bL['bH'].values,bH_bL['bL'].values)
 #sco_common = parameters.estimate_Sco(Rd_Bn_LL_common['Rd'].values)
 
 inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
@@ -441,8 +443,6 @@ inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax[0][0],'Theta':Jmax[0][1],\
 vcmax_full = parameters.estimate_Vcmax(inputs)
 vcmax_var_gm = parameters.estimate_Vcmax_var_gm(inputs)
 vcmax_const_gm = parameters.estimate_Vcmax_constant_gm(inputs)
-
-vcmax_jmax = parameters.estimate_Vcmax_Jmax(inputs)
 
 inputs = {'Rd':Rd_Bn_LL['Rd'].values,'Jmax':Jmax_individual['Jmax'].values,\
           'Theta':Jmax_individual['theta'].values,\
