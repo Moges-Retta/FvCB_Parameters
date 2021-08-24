@@ -619,13 +619,15 @@ class Estimate_FvCB_parameters:
         return p_values
     
     def get_Sco_data(self,Rd_values,bH,bL):  
-        
+        FORMAT = ['Replicate','Net_CO2_assimilation_rate','Intercellular_CO2_concentration','CO2R']
         self.gas_exch_measurement.set_O2(0.21)
         ACIH = self.gas_exch_measurement.get_ACI_data()
         ACIH = ACIH[ACIH['CO2R'].between(40,210)]
-
+        ACIH = ACIH[FORMAT]
+        
         self.gas_exch_measurement.set_O2(0.02)
         ACIL = self.gas_exch_measurement.get_ACI_data()
+        ACIL = ACIL[FORMAT]
         ACIL = ACIL[ACIL['CO2R'].between(40,210)]
         cols =  ['Replicate','CiH','AH','CiL','AL','Rd','bH','bL']        
         df = pd.DataFrame([],columns=cols)
@@ -651,7 +653,7 @@ class Estimate_FvCB_parameters:
             df2.loc[:,'AL'] = AL
             df2.loc[:,'CiL'] = CiL    
             df = df.append(df2,'sort=False')
-            # df.to_excel(PATH + 'SCO_data_'+self.gas_exch_measurement.get_species()+'_'+ self.gas_exch_measurement.get_treatment()+'.xlsx', index = False)
+            df.to_excel(PATH + 'SCO_data_corr_'+self.gas_exch_measurement.get_species()+'_'+ self.gas_exch_measurement.get_treatment()+'.xlsx', index = False)
         
         return df
     
@@ -675,7 +677,7 @@ class Estimate_FvCB_parameters:
             CiL = data_r['CiL'].values*constants.atm/10**5
             AL = data_r['AL'].values   
             result = stats.linregress(CiH, AH) #slope, intercept, r, p, se 
-            bH = result.slope; 
+            bH = result.slope; intercept_bH = result.intercept; 
             R2_bH = result.rvalue**2
             df.loc[replicate-1,'R2_bH'] = R2_bH
             df.loc[replicate-1,'bH'] = bH
@@ -683,34 +685,34 @@ class Estimate_FvCB_parameters:
             df.loc[replicate-1,'Replicate'] = replicate            
             
             result = stats.linregress(CiL, AL) #slope, intercept, r, p, se
-            bL = result.slope; 
+            bL = result.slope; intercept_bL = result.intercept; 
             R2_bL = result.rvalue**2
             
             df.loc[replicate-1,'R2_bL'] = R2_bL
             df.loc[replicate-1,'bL'] = bL
             df.loc[replicate-1,'Std.err_bL'] = result.stderr            
-#        
-        # plt.rcParams["figure.figsize"] = (10,5)
-        # fig, (ax1, ax2) = plt.subplots(ncols=2,constrained_layout=True)        
-        # ax1.plot(CiH,AH,'ko')
-        # ax1.plot(CiH,bH*CiH+intercept_bH)
-        # ax1.set_ylabel('AH (µmol $m^{-2}$ $s^{-1}$)')
-        # ax1.set_xlabel('CiH (µbar)')
         
-        # ax2.plot(CiL,AL,'ko')
-        # ax2.plot(CiL,bL*CiL+intercept_bL)        
-        # ax2.set_ylabel('AL (µmol $m^{-2}$ $s^{-1}$)')
-        # ax2.set_xlabel('CiL (µbar)')
+        plt.rcParams["figure.figsize"] = (10,5)
+        fig, (ax1, ax2) = plt.subplots(ncols=2,constrained_layout=True)        
+        ax1.plot(CiH,AH,'ko')
+        ax1.plot(CiH,bH*CiH+intercept_bH)
+        ax1.set_ylabel('AH (µmol $m^{-2}$ $s^{-1}$)')
+        ax1.set_xlabel('CiH (µbar)')
+        
+        ax2.plot(CiL,AL,'ko')
+        ax2.plot(CiL,bL*CiL+intercept_bL)        
+        ax2.set_ylabel('AL (µmol $m^{-2}$ $s^{-1}$)')
+        ax2.set_xlabel('CiL (µbar)')
        
-        # text = 'y = ' + str(np.round(bH,3)) + '*x + '+str(np.round(intercept_bH,3))\
-        #       + ' \n R2 = '+str(np.round(R2_bH,3))
+        text = 'y = ' + str(np.round(bH,3)) + '*x + '+str(np.round(intercept_bH,3))\
+              + ' \n R2 = '+str(np.round(R2_bH,3))
 
-        # text2 = 'y = ' + str(np.round(bL,3)) + '*x + '+str(np.round(intercept_bL,3))\
-        #       + ' \n R2 = '+str(np.round(R2_bL,3))
+        text2 = 'y = ' + str(np.round(bL,3)) + '*x + '+str(np.round(intercept_bL,3))\
+              + ' \n R2 = '+str(np.round(R2_bL,3))
               
-        # ax1.text(min(CiH)+1,max(AH)-3,text)
-        # ax2.text(min(CiL)+1,max(AL)-3,text2)
-        # plt.show()   
+        ax1.text(min(CiH)+1,max(AH)-3,text)
+        ax2.text(min(CiL)+1,max(AL)-3,text2)
+        plt.show()   
         return df
         
         
@@ -1108,13 +1110,12 @@ class Estimate_FvCB_parameters:
         sco = inputs.get('Sco')
         
         df_vcmax = self.get_vcmax_data(rd,jmax,theta,k2LL)
-
         
         bnds=((0,0,0,0),(1000,70,20,20)) 
         x0 = np.array([200,12,0.5,1])        #Vcmax,TP,sigma,Jmax        
         result = optimize.least_squares(self.model_Vcmax,x0,args=[df_vcmax,sco],method='trf',bounds=bnds)
         # result = optimize.least_squares(self.model_Vcmax,x0,args=[df_vcmax,sco],method='lm')
-        
+    
         res = self.model_Vcmax(result.x,df_vcmax,sco)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
@@ -1248,6 +1249,7 @@ class Estimate_FvCB_parameters:
         sco = sco.astype(float)        
         gamma_x = 0.5*O/sco
         gm0 = 0
+        
         #Rubisco-limited part;
         kmc = 267
         kmo = 164
@@ -1260,6 +1262,7 @@ class Estimate_FvCB_parameters:
         BBR = -((x2R+gamma_x)*(x1R-rd)+PR*(ci+x2R)+R*QR)
         CCR = PR*QR
         AR = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2.*AAR)
+        
         #Electron transport limited part;
         BB = k2LL*i_inc + jmax;
         J = (BB-(BB**2-4*theta*jmax*k2LL*i_inc)**0.5)/(2*theta);
@@ -1271,6 +1274,7 @@ class Estimate_FvCB_parameters:
         BBJ = -((x2J+gamma_x)*(x1J-rd)+PJ*(ci+x2J)+R*QJ);
         CCJ = PJ*QJ;
         AJ = (-BBJ-(BBJ**2-4.*AAJ*CCJ)**0.5)/(2.*AAJ);
+        
         #TPU limited part;
         AP = 3*TP-rd;
         A1 = np.minimum(AR,AJ)
@@ -2520,7 +2524,7 @@ class Estimate_FvCB_parameters:
     #     A_mod = np.minimum(A1,AP)
     #     return A_mod
 
-    def calculate_A_Bush_XY(self,xo,df_vcmax,gms):
+    def calculate_A_Bush_XY(self,xo,df_vcmax):
         
         """
         FvCB model of photosynthesis extended to include nitrogen assimilation
@@ -2528,16 +2532,19 @@ class Estimate_FvCB_parameters:
         
         """
         
-        alphaG, alphaS,vcmax1,vcmax2,vcmax3,vcmax4,TP1,TP2,TP3,TP4,R = xo
+        alphaS,vcmax1,vcmax2,vcmax3,vcmax4,TP1,TP2,TP3,TP4,gm0,jmax1,jmax2,jmax3,jmax4 = xo
         vcmaxs=[vcmax1,vcmax2,vcmax3,vcmax4]
         tps=[TP1,TP2,TP3,TP4]
+        jmaxs=[jmax1,jmax2,jmax3,jmax4]
         
         kmc = 267
         kmo = 164
 
         sco = 3.259;
         alphaT = 0;
+        alphaG = 0;
         m=0;
+        R = 0;
         # gm0 = 0
         replicates = df_vcmax['Replicate'].unique()
         A_mod_arr = np.array([])
@@ -2548,17 +2555,17 @@ class Estimate_FvCB_parameters:
             theta = df_vcmax_r['Theta'].values.astype(float)  
             O = df_vcmax_r['O'].values.astype(float)
             rd = df_vcmax_r['Rd'].values.astype(float)
-            jmax = df_vcmax_r['Jmax'].values.astype(float)
+            #jmax = df_vcmax_r['Jmax'].values.astype(float)
             
             k2LL = df_vcmax_r['k2LL'].values.astype(float)     
             vcmax =  vcmaxs[replicate-1]
-            # jmax =  jmaxs[replicate-1]
+            jmax =  jmaxs[replicate-1]
             TP =  tps[replicate-1]
-            gm0 = gms[replicate-1]
+            #gm0 = gms[replicate-1]
             # Rubisco-limited part
 
             gamma_st = 0.5*O/sco;
-            gamma_x = (gamma_st*(1-alphaG)+alphaT);
+            gamma_x = gamma_st*(1-alphaG+2*alphaT);
             
             
             #  Rubisco-limited part;
@@ -2597,16 +2604,30 @@ class Estimate_FvCB_parameters:
             AAR = X2R+gamma_x*(1-m)+R*(ci+X2R);
             BBR = m*(rd*X2R+gamma_x*X1R)-QR-PR*(ci+X2R)-R*QR2;
             CCR = -m*(rd*X2R+gamma_x*X1R)*(X1R-rd)+PR*QR2;
-            AP = (-BBR-(BBR**2-4.*AAR*CCR)**0.5)/(2.*AAR);
-        
-            A1 = np.minimum(AR,AJ)
-            A_mod = np.minimum(A1,AP)
+            
+            #NOTE: + sign in front of SQRT part;
+            bacT = BBR**2-4*AAR*CCR;
+            AP = (-BBR + (np.maximum(0.00001,BBR**2-4*AAR*CCR))**0.5)/(2*AAR);
+            
+            #--- Finding the Ci transition point from Aj to Ap;
+            CCTS = np.maximum((1.0001+3*alphaG+6*alphaT+4*alphaS)*gamma_x, (24*gamma_x*TP+(1+3*alphaG+6*alphaT+4*alphaS)*gamma_x*J)/(J-12*TP));
+            GMTS = gm0+R*3*TP/(CCTS-(1+3*alphaG+6*alphaT+4*alphaS)*gamma_x);
+            AATS = (CCTS-(1-m)*gamma_x)*3*TP/(CCTS-(1+3*alphaG+6*alphaT+4*alphaS)*gamma_x);
+            CITS  = CCTS + (AATS-(1-m)*rd)/GMTS;
+
+            #-- Model for net photosynthesis rate;
+            if ci.all()<CITS.all() or bacT.all()<0:
+                A_mod = np.minimum(AR,AJ)
+            else:
+                A1 = np.minimum(AR,AJ)
+                A_mod = np.minimum(A1,AP)
+                
             A_mod_arr = np.append(A_mod_arr,A_mod)
         
         return A_mod_arr
 
 
-    def plot_A_Bush_XY(self,xo,df_vcmax,gms):
+    def plot_A_Bush_XY(self,xo,df_vcmax):
         plt.rcParams["figure.figsize"] = (15,8) 
         plt.rcParams.update({'font.size': 12})
 
@@ -2622,7 +2643,7 @@ class Estimate_FvCB_parameters:
         ci = np.reshape(ci,(-1,4),order='F')
         ci = np.mean(ci,axis=1)
 
-        A_mod_ci = self.calculate_A_Bush_XY(xo,df_vcmax,gms)
+        A_mod_ci = self.calculate_A_Bush_XY(xo,df_vcmax)
         df_vcmax['A_mod_ci']=A_mod_ci
         df_vcmax21 = df_vcmax[df_vcmax['O']==210]
         df_vcmax_ci = df_vcmax21[df_vcmax21['curve']=='ACI']
@@ -2667,8 +2688,8 @@ class Estimate_FvCB_parameters:
         plt.show()  
         
         
-    def model_Vcmax_Bush_XY(self,xo,df_vcmax,gms):
-        A_mod = self.calculate_A_Bush_XY(xo,df_vcmax,gms)    
+    def model_Vcmax_Bush_XY(self,xo,df_vcmax):
+        A_mod = self.calculate_A_Bush_XY(xo,df_vcmax)    
         return df_vcmax['A'].values - A_mod
 
     
@@ -2678,20 +2699,19 @@ class Estimate_FvCB_parameters:
         jmaxs = inputs['Jmax']
         thetas = inputs['Theta']
         k2LL = inputs['k2LL']    
-        gms = inputs['gms']
+        #gms = inputs['gms']
         df_vcmax = self.get_vcmax_data(rds,jmaxs,thetas,k2LL)
-      
-        #alphaG, alphaS, Vcmax1-4,TP1-4,sigma
-        bnds=((0.0001,0.0004,0,0,0,0,0,0,0,0,0),(1,1,500,500,500,500,50,50,50,50,5)) 
-        x0 = np.array([0.05,0.04,180,180,180,180,25,25,25,25,0.1])                
-        result = optimize.least_squares(self.model_Vcmax_Bush_XY,x0,args=[df_vcmax,gms],method='trf',bounds=bnds)
-        # result = optimize.least_squares(self.model_Vcmax_Bush,x0,args=[inputs],method='lm')
-        
-        res = self.model_Vcmax_Bush_XY(result.x,df_vcmax,gms)
+        df_vcmax=df_vcmax[df_vcmax['O']==210]
+        # alphaS, Vcmax1-4,TP1-4,gm,Jmax1,Jmax2,Jmax3,Jmax4
+        bnds=((0,0,0,0,0,0,0,0,0,0,0,0,0,0),(0.75,500,500,500,500,50,50,50,50,1,800,800,800,800)) 
+        x0 = np.array([0.01,100,120,100,120,15,12,10,10,0.02,120,100,150,100])                
+        result = optimize.least_squares(self.model_Vcmax_Bush_XY,x0,args=[df_vcmax],method='trf',bounds=bnds)
+
+        res = self.model_Vcmax_Bush_XY(result.x,df_vcmax)
         J = np.array(result.jac)
         S = np.array(res).T.dot(np.array(res))
         H=2*J.T.dot(J);
-        degfr=len(res)-11;
+        degfr=len(res)-14;
         G = np.linalg.pinv(H)
         var_1=2*S*G[0,0]/degfr;
         var_2=2*S*G[1,1]/degfr;
@@ -2704,6 +2724,9 @@ class Estimate_FvCB_parameters:
         var_9=2*S*G[8,8]/degfr;
         var_10=2*S*G[9,9]/degfr;
         var_11=2*S*G[10,10]/degfr;
+        var_12=2*S*G[11,11]/degfr;
+        var_13=2*S*G[12,12]/degfr;
+        var_14=2*S*G[13,13]/degfr;
         
         var_1 = np.sqrt(var_1)
         var_2 = np.sqrt(var_2)
@@ -2716,41 +2739,50 @@ class Estimate_FvCB_parameters:
         var_9 = np.sqrt(var_9)
         var_10 = np.sqrt(var_10)
         var_11 = np.sqrt(var_11)
+        var_11 = np.sqrt(var_12)
+        var_11 = np.sqrt(var_13)
+        var_11 = np.sqrt(var_14)
 
         if result.success:
-            self.plot_A_Bush_XY(result.x,df_vcmax,gms)
-            ind = ['alphaG','alphaS','vcmax1','vcmax2','vcmax3',\
-                   'vcmax4','Tp1','Tp2','Tp3','Tp4','sigma']
+            self.plot_A_Bush_XY(result.x,df_vcmax)
+            ind = ['gm','alphaS','vcmax1','vcmax2','vcmax3',\
+                   'vcmax4','Jmax1','Jmax2','Jmax3','Jmax4','Tp1','Tp2','Tp3','Tp4']
             df=pd.DataFrame([],columns=['estimate','err'],index=ind)
-            df.loc['alphaG','estimate'] = result.x[0]
-            df.loc['alphaS','estimate'] = result.x[1]
+            df.loc['gm','estimate'] = result.x[9]
+            df.loc['alphaS','estimate'] = result.x[0]
             
-            df.loc['vcmax1','estimate'] = result.x[2]
-            df.loc['vcmax2','estimate'] = result.x[3]
-            df.loc['vcmax3','estimate'] = result.x[4]
-            df.loc['vcmax4','estimate'] = result.x[5]
+            df.loc['vcmax1','estimate'] = result.x[1]
+            df.loc['vcmax2','estimate'] = result.x[2]
+            df.loc['vcmax3','estimate'] = result.x[3]
+            df.loc['vcmax4','estimate'] = result.x[4]
             
-            df.loc['Tp1','estimate'] = result.x[6]
-            df.loc['Tp2','estimate'] = result.x[7]
-            df.loc['Tp3','estimate'] = result.x[8]
-            df.loc['Tp4','estimate'] = result.x[9]
+            df.loc['Tp1','estimate'] = result.x[5]
+            df.loc['Tp2','estimate'] = result.x[6]
+            df.loc['Tp3','estimate'] = result.x[7]
+            df.loc['Tp4','estimate'] = result.x[8]
             
-            df.loc['sigma','estimate'] = result.x[10]
+            df.loc['Jmax1','estimate'] = result.x[10]
+            df.loc['Jmax2','estimate'] = result.x[11]
+            df.loc['Jmax3','estimate'] = result.x[12]
+            df.loc['Jmax4','estimate'] = result.x[13]
 
-            df.loc['alphaG','err'] = var_1
-            df.loc['alphaS','err'] = var_2
+            df.loc['gm','err'] = var_10
+            df.loc['alphaS','err'] = var_1
             
-            df.loc['vcmax1','err'] = var_3
-            df.loc['vcmax2','err'] = var_4
-            df.loc['vcmax3','err'] = var_5
-            df.loc['vcmax4','err'] = var_6
+            df.loc['vcmax1','err'] = var_2
+            df.loc['vcmax2','err'] = var_3
+            df.loc['vcmax3','err'] = var_4
+            df.loc['vcmax4','err'] = var_5
             
-            df.loc['Tp1','err'] = var_7
-            df.loc['Tp2','err'] = var_8
-            df.loc['Tp3','err'] = var_9
-            df.loc['Tp4','err'] = var_10
-            df.loc['sigma','err'] = var_11
-            
+            df.loc['Tp1','err'] = var_6
+            df.loc['Tp2','err'] = var_7
+            df.loc['Tp3','err'] = var_8
+            df.loc['Tp4','err'] = var_9
+
+            df.loc['Jmax1','err'] = var_11
+            df.loc['Jmax2','err'] = var_12
+            df.loc['Jmax3','err'] = var_13
+            df.loc['Jmax4','err'] = var_14            
             
             return df
         else:

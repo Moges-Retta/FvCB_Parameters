@@ -70,13 +70,13 @@ def calculate_values():
     treatment = r2.get()
     O = r3.get()/1000
     gas_exch_measurement = Gas_exchange_measurement(O,species,treatment)
-    [I_ave_ci,Ci_ave_ci,A_ave_ci,gs_ave_ci,A_std,gs_std] = gas_exch_measurement.average_A_CI()
-    gas_exch_measurement.plot_ave_A_CI(Ci_ave_ci,A_ave_ci,A_std)
+    df_ave = gas_exch_measurement.average_A_CI()
+    gas_exch_measurement.plot_ave_A_CI(df_ave)
 #    gas_exch_measurement.plot_ave_gs_CI(Ci_ave_ci,gs_ave_ci,gs_std)
 #    [I_ave_i,i_ave_i,A_ave_i,gs_ave_i,A_std,gs_std] = gas_exch_measurement.average_A_I()
 #    gas_exch_measurement.plot_ave_A_I(I_ave_i,A_ave_i,A_std)
 #    gas_exch_measurement.plot_ave_gs_I(I_ave_i,gs_ave_i,gs_std)
-    logo = Image.open('A_BN_LL.png')
+    logo = Image.open('A_CI_BN_LL.png')
     logo = ImageTk.PhotoImage(logo)
     logo_label = tk.Label(image=logo)
     logo_label.image = logo
